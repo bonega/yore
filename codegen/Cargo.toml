@@ -1,0 +1,13 @@
+[package]
+name = "yore"
+version = "0.1.0"
+authors = ["Andreas Liljeqvist <bonega@gmail.com>"]
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+codegen = { git = "https://github.com/bonega/codegen", branch = "associated-consts" }
+regex = "1.5.4"
+anyhow = "1.0.40"

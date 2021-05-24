@@ -1,0 +1,15 @@
+[package]
+name = "yore"
+version = "0.1.0"
+authors = ["Andreas Liljeqvist <bonega@gmail.com>"]
+edition = "2018"
+categories = ["encoding"]
+keywords = ["encoding", "charset"]
+license = "MIT"
+description = "Rust library for decoding/encoding character sets according to OEM code pages"
+repository = "https://github.com/bonega/yore/"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+thiserror = "1.0.25"
