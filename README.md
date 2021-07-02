@@ -6,7 +6,7 @@ Rust library for decoding/encoding character sets according to OEM code pages.
 [![yore at docs.rs](https://docs.rs/yore/badge.svg)](https://docs.rs/yore)
 
 # Features
-* Fast
+* [Fast](https://bonega.github.io/yore-criterion/report/index.html)
 * Minimal memory usage due to `Cow` and `shrink_to_fit`
 * Simple API
 * Many [supported code pages](#supported-code-pages)
