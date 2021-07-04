@@ -108,6 +108,11 @@ pub(crate) trait DecoderIncomplete {
         Ok(())
     }
 }
+
+pub(crate) const NZ_ONE: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(1) };
+pub(crate) const NZ_TWO: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(2) };
+pub(crate) const NZ_THREE: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(3) };
+
 const USIZE_SIZE: usize = mem::size_of::<usize>();
 
 pub(crate) trait DecoderComplete {

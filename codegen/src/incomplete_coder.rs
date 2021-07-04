@@ -1,5 +1,5 @@
 use crate::{CodePage, DecodeError, EncodeError};
-use crate::internal::{Encoder, DecoderIncomplete};
+use crate::internal::{Encoder, DecoderIncomplete, NZ_ONE, NZ_TWO, NZ_THREE};
 use std::borrow::Cow;
 use std::num::NonZeroU8;
 

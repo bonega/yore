@@ -72,7 +72,7 @@ fn build_complete_decode_table(definition: UnicodeMapping) -> String {
 }
 
 fn build_incomplete_decode_table(definition: UnicodeMapping) -> String {
-    let mut res = "unsafe {\n[\n".to_owned();
+    let mut res = "[\n".to_owned();
     let mut buffer = [0u8; 4];
     for c in definition {
         let arm = c.map_or("None,\n".to_owned(), |c| {
@@ -85,13 +85,19 @@ fn build_incomplete_decode_table(definition: UnicodeMapping) -> String {
                 encoded_byte.get(2).unwrap_or(&0)
             );
             format!(
-                "Some(({}, NonZeroU8::new_unchecked({}))),\n",
-                formatted_bytes, len
+                "Some(({}, {})),\n",
+                formatted_bytes,
+                match len {
+                    1 => "NZ_ONE",
+                    2 => "NZ_TWO",
+                    3 => "NZ_THREE",
+                    _ => panic!("Invalid length"),
+                }
             )
         });
         res.push_str(&arm);
     }
-    res.push_str("]}");
+    res.push(']');
     res
 }
 
@@ -173,7 +179,10 @@ fn build_encoder_internal(name: &str, definition: &UnicodeMapping) -> Impl {
         .line("(0xE0..=0xEF, _) => {*bytes=&bytes[3..]; return None}")
         .line("(0xF0..=0xF4, _) => {*bytes=&bytes[4..]; return None}")
         .line("_ => panic!(),");
-    encode_fn.push_block(match_body).attr("doc(hidden)").attr("inline");
+    encode_fn
+        .push_block(match_body)
+        .attr("doc(hidden)")
+        .attr("inline");
 
     let mut res = Impl::new(name);
     res.impl_trait("Encoder").push_fn(encode_fn);
