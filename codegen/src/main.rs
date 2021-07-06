@@ -5,7 +5,7 @@ use std::fs::{read_to_string, File};
 use std::io::{BufWriter, Write};
 use std::process::{Command, Stdio};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use codegen::{Block, Function, Impl, Scope};
 use regex::Regex;
 
@@ -35,10 +35,9 @@ fn format_code(value: &str) -> Cow<'_, str> {
 }
 
 type UnicodeMapping = [Option<char>; 256];
-fn parse_definition(path: &str) -> Result<UnicodeMapping> {
+fn parse_unicode_dot_org(path: &str) -> Result<UnicodeMapping> {
     let s = read_to_string(path)?;
-    let re_str = r"0x([0-9A-Fa-f]{2})\t(?:0x([0-9A-Za-f]{4}))?";
-    let re = Regex::new(re_str)?;
+    let re = Regex::new(r"0x([0-9A-Fa-f]{2})\t(?:0x([0-9A-Za-f]{4}))?")?;
     let m = re.captures_iter(&s);
     Ok(m.map(|c| {
         c.get(2)
@@ -48,6 +47,26 @@ fn parse_definition(path: &str) -> Result<UnicodeMapping> {
     .collect::<Vec<_>>()
     .try_into()
     .unwrap())
+}
+
+fn parse_whatwg(path: &str) -> Result<[Option<char>; 256]> {
+    let s = read_to_string(path)?;
+    let re = Regex::new(r"(\d+)\t0x([0-9A-Za-f]{4})")?;
+    let m = re.captures_iter(&s);
+    let mut res = [None; 256];
+    for (i, v) in res[..128].iter_mut().enumerate() {
+        *v = std::char::from_u32(i as u32);
+    }
+    for cap in m {
+        let i: u8 = cap.get(1).context("no index entry")?.as_str().parse()?;
+        let c = char::from_u32(u32::from_str_radix(
+            cap.get(2).context("No unicode entry")?.as_str(),
+            16,
+        )?)
+        .context("Not a valid char")?;
+        res[i as usize + 128] = Some(c);
+    }
+    Ok(res)
 }
 
 fn build_complete_decode_table(definition: UnicodeMapping) -> String {
@@ -189,11 +208,10 @@ fn build_encoder_internal(name: &str, definition: &UnicodeMapping) -> Impl {
     res
 }
 
-fn generate_coder(name: &str, path: &str) -> Result<()> {
+fn generate_coder(name: &str, definition: UnicodeMapping) -> Result<()> {
     let mut file = BufWriter::new(
         File::create(format!("../src/code_pages/{}.rs", name.to_lowercase())).unwrap(),
     );
-    let definition = parse_definition(path)?;
     let mut coder = Scope::new();
     coder.push_impl(build_encoder_internal(name, &definition));
 
@@ -223,13 +241,20 @@ fn generate_coder(name: &str, path: &str) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    let encodings = [
-        437, 737, 850, 852, 855, 857, 860, 861, 862, 863, 864, 865, 866, 869, 874, 1250, 1251,
-        1252, 1253, 1254, 1255, 1256, 1257, 1258,
+    let unicode_dot_org_encodings = [
+        437, 737, 850, 852, 855, 857, 860, 861, 862, 863, 864, 865, 866, 869,
     ];
-    for cp in encodings {
+    for cp in unicode_dot_org_encodings {
         let name = format!("CP{}", cp);
-        generate_coder(&name, &format!("tables/{}.txt", name))?;
+        let definition = parse_unicode_dot_org(&format!("tables/unicode.org/{}.txt", name))?;
+        generate_coder(&name, definition)?;
+    }
+
+    let whatwg_encodings = [874, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258];
+    for cp in whatwg_encodings {
+        let name = format!("CP{}", cp);
+        let definition = parse_whatwg(&format!("tables/whatwg/index-windows-{}.txt", cp))?;
+        generate_coder(&name, definition)?;
     }
     Ok(())
 }

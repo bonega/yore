@@ -12,6 +12,7 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 oem_cp = "1.1.0"
+encoding_rs = "0.8.28"
 
 [dependencies.yore]
 path = ".."
