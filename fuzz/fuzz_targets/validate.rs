@@ -140,6 +140,9 @@ fuzz_target!(|data: &[u8]| {
     validate_encoder(&CP862, &ENCODING_TABLE_CP862, data);
     validate_complete_decoder(&CP863, &DECODING_TABLE_CP863, data);
     validate_encoder(&CP863, &ENCODING_TABLE_CP863, data);
+    // 864 is equivalent expect that `yore` handles redefined ascii
+    // in this case codepoint 0x25 maps to char '٪' when decoding.
+    // '٪' and '%' both encodes to 0x25.
     // validate_incomplete_decoder(&CP864, &DECODING_TABLE_CP864, data);
     // validate_encoder(&CP864, &ENCODING_TABLE_CP864, data);
     validate_complete_decoder(&CP865, &DECODING_TABLE_CP865, data);
