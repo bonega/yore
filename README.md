@@ -2,11 +2,11 @@
 
 Rust library for decoding/encoding character sets according to OEM code pages.
 
-[![yore at crates.io](https://img.shields.io/badge/crates.io-0.2.0-blue)](https://crates.io/crates/yore)
+[![yore at crates.io](https://img.shields.io/badge/crates.io-0.3.0-blue)](https://crates.io/crates/yore)
 [![yore at docs.rs](https://docs.rs/yore/badge.svg)](https://docs.rs/yore)
 
 # Features
-* [Fast](https://bonega.github.io/yore-criterion/report/index.html)
+* [Fast](https://bonega.github.io/yore-criterion/report/index.html) [*](#*-benchmarks) 
 * Minimal memory usage due to `Cow` and `shrink_to_fit`
 * Simple API
 * Many [supported code pages](#supported-code-pages)
@@ -18,7 +18,7 @@ Add `yore` to `Cargo.toml`.
 
 ```toml
 [dependencies]
-yore = "0.2.0"
+yore = "0.3.0"
 ```
 
 # Examples
@@ -89,3 +89,9 @@ fn do_something(code_page: &dyn CodePage, bytes: &[u8]) {
 | 1256 | windows-1256   | ANSI Arabic; Arabic (Windows)                                                                       |
 | 1257 | windows-1257   | ANSI Baltic; Baltic (Windows)                                                                       |
 | 1258 | windows-1258   | ANSI/OEM Vietnamese; Vietnamese (Windows)                                                           |
+
+# * Benchmarks
+`encoding_rs` supports only a few of the encodings that `oem_cp` and `yore` supports.
+Furthermore, the use case of `encoding_rs` is focused on streaming.
+
+See [bench crate](benchmark/README.md) for details
