@@ -1,7 +1,7 @@
 use crate::{CodePage, DecodeError, EncodeError};
-use crate::internal::{Encoder, DecoderIncomplete, NZ_ONE, NZ_TWO, NZ_THREE};
+use crate::internal::Encoder;
+use crate::internal::decoder_incomplete::{decode_helper, NZ_ONE, NZ_TWO, NZ_THREE};
 use std::borrow::Cow;
-use std::num::NonZeroU8;
 
 impl CODERSTRUCT {
     /// Decode CODERSTRUCT byte-encoding into UTF-8 string
@@ -17,7 +17,7 @@ impl CODERSTRUCT {
     /// ```
     #[inline(always)]
     pub fn decode(self, bytes: &[u8]) -> Result<Cow<str>, DecodeError> {
-        Self::decode_helper(bytes, None)
+        decode_helper(&DECODE_TABLE, bytes, None)
     }
 
     /// Decode CODERSTRUCT byte-encoding into UTF-8 string
@@ -33,7 +33,7 @@ impl CODERSTRUCT {
     /// ```
     #[inline(always)]
     pub fn decode_lossy(self, bytes: &[u8]) -> Cow<str> {
-        Self::decode_helper(bytes, Some('�')).unwrap()
+        decode_helper(&DECODE_TABLE, bytes, Some('�')).unwrap()
     }
 
     /// Decode CODERSTRUCT byte-encoding into UTF-8 string
@@ -52,7 +52,7 @@ impl CODERSTRUCT {
     /// ```
     #[inline(always)]
     pub fn decode_lossy_fallback(self, bytes: &[u8], fallback: char) -> Cow<str> {
-        Self::decode_helper(bytes, Some(fallback)).unwrap()
+        decode_helper(&DECODE_TABLE, bytes, Some(fallback)).unwrap()
     }
 
 
@@ -114,6 +114,4 @@ impl CodePage for CODERSTRUCT {
     }
 }
 
-impl DecoderIncomplete for CODERSTRUCT {
-    const DECODE_TABLE: [Option<([u8; 3], NonZeroU8)>; 256] = PLACEHOLDER_TABLE;
-}
+const DECODE_TABLE: crate::internal::decoder_incomplete::Table = PLACEHOLDER_TABLE;

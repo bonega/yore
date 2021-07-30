@@ -1,5 +1,7 @@
 use crate::{CodePage, DecodeError, EncodeError};
-use crate::internal::{Encoder, DecoderComplete};
+use crate::internal::decoder_complete;
+use crate::internal::decoder_complete::decode_helper;
+use crate::internal::Encoder;
 use std::borrow::Cow;
 
 #[derive(Copy, Clone)]
@@ -17,7 +19,7 @@ impl CODERSTRUCT {
     /// ```
     #[inline(always)]
     pub fn decode(self, bytes: &[u8]) -> Cow<str> {
-        Self::decode_helper(bytes)
+        decode_helper(&DECODE_TABLE, bytes)
     }
 
     /// Encode UTF-8 string into CODERSTRUCT byte-encoding
@@ -71,6 +73,4 @@ impl CodePage for CODERSTRUCT {
     }
 }
 
-impl DecoderComplete for CODERSTRUCT {
-    const DECODE_TABLE: [([u8; 3], u8); 256] = PLACEHOLDER_TABLE;
-}
+const DECODE_TABLE: decoder_complete::Table = PLACEHOLDER_TABLE;
