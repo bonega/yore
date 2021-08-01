@@ -1,7 +1,7 @@
 use crate::{CodePage, DecodeError, EncodeError};
 use crate::internal::decoder_complete;
 use crate::internal::decoder_complete::decode_helper;
-use crate::internal::Encoder;
+use crate::internal::{Encoder, UTF8Entry, NZ_ONE, NZ_TWO, NZ_THREE};
 use std::borrow::Cow;
 
 #[derive(Copy, Clone)]

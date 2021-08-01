@@ -2,13 +2,10 @@ use core::mem;
 use std::borrow::Cow;
 use std::num::NonZeroU8;
 
-use crate::internal::{contains_nonascii, finalize_string, USIZE_SIZE};
+use crate::internal::{contains_nonascii, finalize_string, UTF8Entry, USIZE_SIZE};
 use crate::DecodeError;
 
-pub(crate) type Table = [Option<([u8; 3], NonZeroU8)>; 256];
-pub(crate) const NZ_ONE: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(1) };
-pub(crate) const NZ_TWO: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(2) };
-pub(crate) const NZ_THREE: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(3) };
+pub(crate) type Table = [Option<UTF8Entry>; 256];
 
 #[inline(always)]
 pub(crate) fn decode_helper<'a>(
@@ -16,12 +13,15 @@ pub(crate) fn decode_helper<'a>(
     bytes: &'a [u8],
     fallback: Option<char>,
 ) -> Result<Cow<'a, str>, DecodeError> {
-    let fallback = fallback.map(|c| {
+    let fallback: Option<UTF8Entry> = fallback.map(|c| {
         let c_len = c.len_utf8();
         assert!(c_len < 4);
-        let mut char_buf = [0; 3];
-        c.encode_utf8(&mut char_buf);
-        (char_buf, NonZeroU8::new(c_len as u8).unwrap())
+        let mut buf = [0; 3];
+        c.encode_utf8(&mut buf);
+        UTF8Entry {
+            buf,
+            len: NonZeroU8::new(c_len as u8).unwrap(),
+        }
     });
     if bytes.is_ascii() {
         let s = unsafe { std::str::from_utf8_unchecked(bytes) };
@@ -75,7 +75,7 @@ unsafe fn decode_slice(
     table: &Table,
     ptr: &mut *mut u8,
     bytes: &[u8],
-    fallback: Option<([u8; 3], NonZeroU8)>,
+    fallback: Option<UTF8Entry>,
 ) -> Result<(), DecodeError> {
     for (i, b) in bytes.iter().enumerate() {
         match table[*b as usize].or(fallback) {
@@ -85,9 +85,9 @@ unsafe fn decode_slice(
                     value: *b,
                 });
             }
-            Some((raw_bytes, c_len)) => {
-                ptr.copy_from_nonoverlapping(raw_bytes.as_ptr(), 3);
-                *ptr = ptr.add(c_len.get() as usize);
+            Some(UTF8Entry { buf, len }) => {
+                ptr.copy_from_nonoverlapping(buf.as_ptr(), 3);
+                *ptr = ptr.add(len.get() as usize);
             }
         }
     }

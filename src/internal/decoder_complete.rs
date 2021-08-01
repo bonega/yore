@@ -1,8 +1,9 @@
-use crate::internal::{contains_nonascii, finalize_string, USIZE_SIZE};
 use core::mem;
 use std::borrow::Cow;
 
-pub(crate) type Table = [([u8; 3], u8); 256];
+use crate::internal::{contains_nonascii, finalize_string, UTF8Entry, USIZE_SIZE};
+
+pub(crate) type Table = [UTF8Entry; 256];
 
 #[inline(always)]
 pub(crate) fn decode_helper<'a>(table: &Table, bytes: &'a [u8]) -> Cow<'a, str> {
@@ -48,8 +49,8 @@ pub(crate) fn decode_helper<'a>(table: &Table, bytes: &'a [u8]) -> Cow<'a, str> 
 #[inline]
 unsafe fn decode_slice(table: &Table, ptr: &mut *mut u8, bytes: &[u8]) {
     for b in bytes {
-        let (raw_bytes, c_len) = table[*b as usize];
-        ptr.copy_from_nonoverlapping(raw_bytes.as_ptr(), 3);
-        *ptr = ptr.add(c_len as usize);
+        let UTF8Entry { buf, len } = table[*b as usize];
+        ptr.copy_from_nonoverlapping(buf.as_ptr(), 3);
+        *ptr = ptr.add(len.get() as usize);
     }
 }

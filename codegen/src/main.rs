@@ -82,7 +82,17 @@ fn build_complete_decode_table(definition: UnicodeMapping) -> String {
                 encoded_byte.get(1).unwrap_or(&0),
                 encoded_byte.get(2).unwrap_or(&0)
             );
-            format!("({}, {}),\n", formatted_bytes, len)
+            format!(
+                "UTF8Entry{{buf: {}, len: {}}},\n",
+                formatted_bytes,
+                match len {
+                    1 => "NZ_ONE",
+                    2 => "NZ_TWO",
+                    3 => "NZ_THREE",
+                    _ => panic!("Invalid length"),
+                }
+            )
+            // format!("({}, {}),\n", formatted_bytes, len)
         });
         res.push_str(&arm);
     }
@@ -104,7 +114,7 @@ fn build_incomplete_decode_table(definition: UnicodeMapping) -> String {
                 encoded_byte.get(2).unwrap_or(&0)
             );
             format!(
-                "Some(({}, {})),\n",
+                "Some(UTF8Entry{{buf: {}, len: {}}}),\n",
                 formatted_bytes,
                 match len {
                     1 => "NZ_ONE",

@@ -7,6 +7,7 @@ use std::borrow::Cow;
 use std::slice::from_raw_parts_mut;
 
 use crate::EncodeError;
+use std::num::NonZeroU8;
 
 pub trait Encoder {
     fn encode_grapheme(&self, bytes: &mut &[u8]) -> Option<u8>;
@@ -77,6 +78,16 @@ fn utf8_bytes_len(bytes: &[u8]) -> usize {
     }
     len
 }
+
+#[derive(Copy, Clone)]
+pub struct UTF8Entry {
+    pub buf: [u8; 3],
+    pub len: NonZeroU8,
+}
+
+pub(crate) const NZ_ONE: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(1) };
+pub(crate) const NZ_TWO: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(2) };
+pub(crate) const NZ_THREE: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(3) };
 
 #[cfg(test)]
 mod tests {

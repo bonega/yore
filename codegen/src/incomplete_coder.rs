@@ -1,6 +1,6 @@
 use crate::{CodePage, DecodeError, EncodeError};
-use crate::internal::Encoder;
-use crate::internal::decoder_incomplete::{decode_helper, NZ_ONE, NZ_TWO, NZ_THREE};
+use crate::internal::{Encoder, UTF8Entry, NZ_ONE, NZ_TWO, NZ_THREE};
+use crate::internal::decoder_incomplete::{decode_helper};
 use std::borrow::Cow;
 
 impl CODERSTRUCT {
