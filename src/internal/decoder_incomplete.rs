@@ -78,18 +78,12 @@ unsafe fn decode_slice(
     fallback: Option<UTF8Entry>,
 ) -> Result<(), DecodeError> {
     for (i, b) in bytes.iter().enumerate() {
-        match table[*b as usize].or(fallback) {
-            None => {
-                return Err(DecodeError {
-                    position: i,
-                    value: *b,
-                });
-            }
-            Some(UTF8Entry { buf, len }) => {
-                ptr.copy_from_nonoverlapping(buf.as_ptr(), 3);
-                *ptr = ptr.add(len.get() as usize);
-            }
-        }
+        let UTF8Entry { buf, len } = table[*b as usize].or(fallback).ok_or(DecodeError {
+            position: i,
+            value: *b,
+        })?;
+        ptr.copy_from_nonoverlapping(buf.as_ptr(), 3);
+        *ptr = ptr.add(len.get() as usize);
     }
     Ok(())
 }
