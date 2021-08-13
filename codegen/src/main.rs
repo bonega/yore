@@ -86,9 +86,9 @@ fn build_complete_decode_table(definition: UnicodeMapping) -> String {
                 "UTF8Entry{{buf: {}, len: {}}},\n",
                 formatted_bytes,
                 match len {
-                    1 => "NZ_ONE",
-                    2 => "NZ_TWO",
-                    3 => "NZ_THREE",
+                    1 => "UTF8Len::One",
+                    2 => "UTF8Len::Two",
+                    3 => "UTF8Len::Three",
                     _ => panic!("Invalid length"),
                 }
             )
@@ -117,9 +117,9 @@ fn build_incomplete_decode_table(definition: UnicodeMapping) -> String {
                 "Some(UTF8Entry{{buf: {}, len: {}}}),\n",
                 formatted_bytes,
                 match len {
-                    1 => "NZ_ONE",
-                    2 => "NZ_TWO",
-                    3 => "NZ_THREE",
+                    1 => "UTF8Len::One",
+                    2 => "UTF8Len::Two",
+                    3 => "UTF8Len::Three",
                     _ => panic!("Invalid length"),
                 }
             )

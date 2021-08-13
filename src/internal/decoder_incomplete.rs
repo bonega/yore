@@ -1,8 +1,7 @@
 use core::mem;
 use std::borrow::Cow;
-use std::num::NonZeroU8;
 
-use crate::internal::{contains_nonascii, finalize_string, UTF8Entry, USIZE_SIZE};
+use crate::internal::{contains_nonascii, finalize_string, UTF8Entry, UTF8Len, USIZE_SIZE};
 use crate::DecodeError;
 
 pub(crate) type Table = [Option<UTF8Entry>; 256];
@@ -20,7 +19,12 @@ pub(crate) fn decode_helper<'a>(
         c.encode_utf8(&mut buf);
         UTF8Entry {
             buf,
-            len: NonZeroU8::new(c_len as u8).unwrap(),
+            len: match c_len {
+                1 => UTF8Len::One,
+                2 => UTF8Len::Two,
+                3 => UTF8Len::Three,
+                _ => unreachable!(),
+            },
         }
     });
     if bytes.is_ascii() {
@@ -83,7 +87,7 @@ unsafe fn decode_slice(
             value: *b,
         })?;
         ptr.copy_from_nonoverlapping(buf.as_ptr(), 3);
-        *ptr = ptr.add(len.get() as usize);
+        *ptr = ptr.add(len as usize);
     }
     Ok(())
 }

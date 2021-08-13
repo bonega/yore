@@ -51,6 +51,6 @@ unsafe fn decode_slice(table: &Table, ptr: &mut *mut u8, bytes: &[u8]) {
     for b in bytes {
         let UTF8Entry { buf, len } = table[*b as usize];
         ptr.copy_from_nonoverlapping(buf.as_ptr(), 3);
-        *ptr = ptr.add(len.get() as usize);
+        *ptr = ptr.add(len as usize);
     }
 }

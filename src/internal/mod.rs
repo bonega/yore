@@ -1,13 +1,11 @@
-pub(crate) mod decoder_complete;
-pub(crate) mod decoder_incomplete;
-
 use core::mem;
 use std::borrow::Cow;
-
 use std::slice::from_raw_parts_mut;
 
 use crate::EncodeError;
-use std::num::NonZeroU8;
+
+pub(crate) mod decoder_complete;
+pub(crate) mod decoder_incomplete;
 
 pub trait Encoder {
     fn encode_grapheme(&self, bytes: &mut &[u8]) -> Option<u8>;
@@ -80,14 +78,19 @@ fn utf8_bytes_len(bytes: &[u8]) -> usize {
 }
 
 #[derive(Copy, Clone)]
-pub struct UTF8Entry {
-    pub buf: [u8; 3],
-    pub len: NonZeroU8,
+#[repr(u8)]
+pub(crate) enum UTF8Len {
+    One = 1,
+    Two = 2,
+    Three = 3,
+    //Four is not allowed in this library
 }
 
-pub(crate) const NZ_ONE: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(1) };
-pub(crate) const NZ_TWO: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(2) };
-pub(crate) const NZ_THREE: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(3) };
+#[derive(Copy, Clone)]
+pub(crate) struct UTF8Entry {
+    pub buf: [u8; 3],
+    pub len: UTF8Len,
+}
 
 #[cfg(test)]
 mod tests {
