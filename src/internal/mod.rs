@@ -92,6 +92,24 @@ pub(crate) struct UTF8Entry {
     pub len: UTF8Len,
 }
 
+impl UTF8Entry {
+    fn from_char(c: char) -> Self {
+        let c_len = c.len_utf8();
+        assert!(c_len < 4);
+        let mut buf = [0; 3];
+        c.encode_utf8(&mut buf);
+        UTF8Entry {
+            buf,
+            len: match c_len {
+                1 => UTF8Len::One,
+                2 => UTF8Len::Two,
+                3 => UTF8Len::Three,
+                _ => unreachable!(),
+            },
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::code_pages::CP864;

@@ -1,7 +1,7 @@
 use core::mem;
 use std::borrow::Cow;
 
-use crate::internal::{contains_nonascii, finalize_string, UTF8Entry, UTF8Len, USIZE_SIZE};
+use crate::internal::{contains_nonascii, finalize_string, UTF8Entry, USIZE_SIZE};
 use crate::DecodeError;
 
 pub(crate) type Table = [Option<UTF8Entry>; 256];
@@ -12,21 +12,7 @@ pub(crate) fn decode_helper<'a>(
     bytes: &'a [u8],
     fallback: Option<char>,
 ) -> Result<Cow<'a, str>, DecodeError> {
-    let fallback: Option<UTF8Entry> = fallback.map(|c| {
-        let c_len = c.len_utf8();
-        assert!(c_len < 4);
-        let mut buf = [0; 3];
-        c.encode_utf8(&mut buf);
-        UTF8Entry {
-            buf,
-            len: match c_len {
-                1 => UTF8Len::One,
-                2 => UTF8Len::Two,
-                3 => UTF8Len::Three,
-                _ => unreachable!(),
-            },
-        }
-    });
+    let fallback: Option<UTF8Entry> = fallback.map(UTF8Entry::from_char);
     if bytes.is_ascii() {
         let s = unsafe { std::str::from_utf8_unchecked(bytes) };
         return Ok(s.into());
