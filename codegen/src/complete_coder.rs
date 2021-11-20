@@ -61,16 +61,6 @@ impl CodePage for CODERSTRUCT {
     fn decode<'a>(&self, bytes: &'a [u8]) -> Result<Cow<'a, str>, DecodeError> {
         Ok((*self).decode(bytes))
     }
-
-    #[inline(always)]
-    fn decode_lossy<'a>(&self, bytes: &'a [u8]) -> Cow<'a, str> {
-        (*self).decode(bytes)
-    }
-
-    #[inline(always)]
-    fn decode_lossy_fallback<'a>(&self, bytes: &'a [u8], _fallback: char) -> Cow<'a, str> {
-        (*self).decode(bytes)
-    }
 }
 
 const DECODE_TABLE: decoder_complete::Table = PLACEHOLDER_TABLE;

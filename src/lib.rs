@@ -80,7 +80,10 @@ pub trait CodePage: crate::internal::Encoder {
     /// //codepoint 231 is undefined
     /// assert_eq!(cp857.decode_lossy(&[116, 101, 120, 116, 32, 231]), "text �");
     /// ```
-    fn decode_lossy<'a>(&self, bytes: &'a [u8]) -> Cow<'a, str>;
+    #[inline(always)]
+    fn decode_lossy<'a>(&self, bytes: &'a [u8]) -> Cow<'a, str> {
+        self.decode(bytes).unwrap()
+    }
 
     /// Decode single-byte encoding into UTF-8 string
     ///
@@ -96,7 +99,10 @@ pub trait CodePage: crate::internal::Encoder {
     /// //codepoint 231 is undefined
     /// assert_eq!(cp857.decode_lossy_fallback(&[116, 101, 120, 116, 32, 231], '�'), "text �");
     /// ```
-    fn decode_lossy_fallback<'a>(&self, bytes: &'a [u8], fallback: char) -> Cow<'a, str>;
+    #[inline(always)]
+    fn decode_lossy_fallback<'a>(&self, bytes: &'a [u8], _fallback: char) -> Cow<'a, str> {
+        self.decode(bytes).unwrap()
+    }
 }
 
 #[derive(Error, Debug)]
