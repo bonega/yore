@@ -18,8 +18,9 @@ pub(crate) fn decode_helper<'a>(
         return Ok(s.into());
     }
 
-    let mut res: Vec<u8> = Vec::with_capacity(bytes.len() * 3);
-    let mut ptr = res.as_mut_ptr();
+    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3);
+    // Safety: decode_slice expects buffer.len() <= src.len() * 3
+    let mut ptr = buffer.as_mut_ptr();
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
     // back to a scalar loop.
@@ -29,7 +30,7 @@ pub(crate) fn decode_helper<'a>(
     unsafe {
         if bytes.len() < USIZE_SIZE || USIZE_SIZE < mem::align_of::<usize>() {
             decode_slice(table, &mut ptr, bytes, fallback)?;
-            return Ok(finalize_string(res, ptr).into());
+            return Ok(finalize_string(buffer, ptr).into());
         }
 
         let (prefix, aligned_bytes, suffix) = bytes.align_to::<usize>();
@@ -56,18 +57,22 @@ pub(crate) fn decode_helper<'a>(
             e.position += prefix.len() + aligned_bytes.len() * USIZE_SIZE;
             e
         })?;
-        Ok(finalize_string(res, ptr).into())
+        Ok(finalize_string(buffer, ptr).into())
     }
 }
 
+/// Lookup every byte in [`src`] using provided [`table`] and write resulting bytes to [`ptr`]
+/// # Safety
+///
+/// This function is unsafe because it assumes that the buffer pointed to by [`ptr`] has a length <= src.len() * 3
 #[inline]
 unsafe fn decode_slice(
     table: &Table,
     ptr: &mut *mut u8,
-    bytes: &[u8],
+    src: &[u8],
     fallback: Option<UTF8Entry>,
 ) -> Result<(), DecodeError> {
-    for (i, b) in bytes.iter().enumerate() {
+    for (i, b) in src.iter().enumerate() {
         let UTF8Entry { buf, len } = table[*b as usize].or(fallback).ok_or(DecodeError {
             position: i,
             value: *b,

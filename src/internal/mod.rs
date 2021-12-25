@@ -1,6 +1,5 @@
 use core::mem;
 use std::borrow::Cow;
-use std::slice::from_raw_parts_mut;
 
 use crate::EncodeError;
 
@@ -16,32 +15,37 @@ pub trait Encoder {
         s: &'a str,
         fallback: Option<u8>,
     ) -> Result<Cow<'a, [u8]>, EncodeError> {
-        let mut bytes = s.as_bytes();
+        let mut src = s.as_bytes();
         if s.is_ascii() {
-            return Ok(bytes.into());
+            return Ok(src.into());
         }
-        let len = utf8_bytes_len(bytes);
+        let len = utf8_bytes_len(src);
         let mut res = Vec::with_capacity(len);
-        let buffer = unsafe { from_raw_parts_mut(res.as_mut_ptr(), len) };
-        for byte in buffer.iter_mut() {
+        // Safety: len is calculated for graphemes
+        unsafe { res.set_len(len) };
+        for byte in res.iter_mut() {
             *byte = self
-                .encode_grapheme(&mut bytes)
+                .encode_grapheme(&mut src)
                 .or(fallback)
                 .ok_or(EncodeError {})?;
         }
-        unsafe { res.set_len(len) };
         Ok(res.into())
     }
 }
 
 const USIZE_SIZE: usize = mem::size_of::<usize>();
 
+/// Given [`buffer`] and end-ptr [`ptr`] set new length and shrink allocation
+///
+/// # Safety
+///
+/// [`ptr`] must be within allocated capacity of [`res`]
 #[inline]
-unsafe fn finalize_string(mut res: Vec<u8>, ptr: *const u8) -> String {
-    let length = ptr.offset_from(res.as_ptr()) as usize;
-    res.set_len(length);
-    res.shrink_to_fit();
-    String::from_utf8_unchecked(res)
+unsafe fn finalize_string(mut buffer: Vec<u8>, ptr: *const u8) -> String {
+    let length = ptr.offset_from(buffer.as_ptr()) as usize;
+    buffer.set_len(length);
+    buffer.shrink_to_fit();
+    String::from_utf8_unchecked(buffer)
 }
 
 //lifted from std internal
