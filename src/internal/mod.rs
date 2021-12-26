@@ -19,7 +19,7 @@ pub trait Encoder {
         if s.is_ascii() {
             return Ok(src.into());
         }
-        let len = utf8_bytes_len(src);
+        let len = s.chars().count();
         let mut res = Vec::with_capacity(len);
         // Safety: len is calculated for graphemes
         unsafe { res.set_len(len) };
@@ -53,32 +53,6 @@ unsafe fn finalize_string(mut buffer: Vec<u8>, ptr: *const u8) -> String {
 fn contains_nonascii(v: usize) -> bool {
     const NONASCII_MASK: usize = 0x8080_8080_8080_8080_u64 as usize;
     (NONASCII_MASK & v) != 0
-}
-
-#[inline]
-fn utf8_bytes_len(bytes: &[u8]) -> usize {
-    let mut len = 0;
-    let bytes = &mut bytes.iter();
-    while let Some(b) = bytes.next() {
-        match b {
-            0x00..=0x7F => {}
-            0x80..=0xDF => {
-                bytes.next();
-            }
-            0xE0..=0xEF => {
-                bytes.next();
-                bytes.next();
-            }
-            0xF0..=0xF4 => {
-                bytes.next();
-                bytes.next();
-                bytes.next();
-            }
-            _ => panic!(),
-        }
-        len += 1;
-    }
-    len
 }
 
 #[derive(Copy, Clone)]
