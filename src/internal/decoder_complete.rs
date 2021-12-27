@@ -13,7 +13,7 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
     }
 
     let mut buffer: Vec<u8> = Vec::with_capacity(src.len() * 3);
-    // Safety: decode_slice expects buffer.len() <= src.len() * 3
+    // Safety: decode_slice expects buffer.len() >= src.len() * 3
     let mut ptr = buffer.as_mut_ptr();
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
@@ -50,7 +50,7 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 /// Lookup every byte in [`src`] using provided [`table`] and write resulting bytes to [`ptr`]
 /// # Safety
 ///
-/// This function is unsafe because it assumes that the buffer pointed to by [`ptr`] has a length <= src.len() * 3
+/// This function is unsafe because it assumes that the buffer pointed to by [`ptr`] has a length >= src.len() * 3
 #[inline]
 unsafe fn decode_slice(table: &Table, ptr: &mut *mut u8, src: &[u8]) {
     for b in src {
