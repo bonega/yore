@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Improve encoding performance
+- Fix potential UB when encoding
 ## [0.3.0] - 2021-07-30
 - Improve performance when decoding extended bytes by about 30-40%
 

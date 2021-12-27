@@ -20,15 +20,20 @@ pub trait Encoder {
             return Ok(src.into());
         }
         let len = s.chars().count();
-        let mut res = Vec::with_capacity(len);
-        // Safety: len is calculated for graphemes
-        unsafe { res.set_len(len) };
-        for byte in res.iter_mut() {
-            *byte = self
+        let mut res = Vec::<u8>::with_capacity(len);
+
+        let res_ptr = res.as_mut_ptr();
+
+        for i in 0..len {
+            let byte = self
                 .encode_grapheme(&mut src)
                 .or(fallback)
                 .ok_or(EncodeError {})?;
+            unsafe { *res_ptr.add(i) = byte };
         }
+
+        // Safety: len is calculated for graphemes, and `res` is now fully initialized.
+        unsafe { res.set_len(len) };
         Ok(res.into())
     }
 }
