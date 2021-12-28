@@ -16,7 +16,7 @@ use rand_pcg::{Lcg128Xsl64, Pcg64};
 
 use yore::code_pages::CP874;
 
-const YORE_IDENTIFIER: &str = "yore 0.2.0";
+const YORE_IDENTIFIER: &str = "yore 0.3.1";
 const OEMCP_IDENTIFIER: &str = "oem_cp 1.1.0";
 const ENCODING_RS_IDENTIFIER: &str = "encoding_rs* 0.8.28";
 
