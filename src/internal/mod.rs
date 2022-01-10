@@ -6,6 +6,7 @@ use crate::EncodeError;
 pub(crate) mod decoder_complete;
 pub(crate) mod decoder_incomplete;
 
+
 pub trait Encoder {
     fn encode_grapheme(&self, bytes: &mut &[u8]) -> Option<u8>;
     #[doc(hidden)]
@@ -108,5 +109,10 @@ mod tests {
         //Standard '%' should still map to 0x25
         let s = "%ﻱ";
         assert_eq!(bytes, *CP864.encode(s).unwrap());
+
+        let s = "AAAAAAA٪";
+        let bytes = [65, 65, 65, 65, 65, 65, 65, 0x25];
+        //Should decode to nonstandard, even if whole usize-len is ascii
+        assert_eq!(CP864.decode(&bytes).unwrap(), s);
     }
 }

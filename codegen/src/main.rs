@@ -245,6 +245,15 @@ fn generate_coder(name: &str, definition: UnicodeMapping) -> Result<()> {
         .replace("CODERSTRUCT", name),
     );
     s.push_str(&coder.to_string());
+    if definition
+        .iter()
+        .take(128)
+        .enumerate()
+        .any(|(i, c)| i < 128 && c.map(|c| !c.is_ascii()).unwrap_or(true))
+    {
+        //non-ascii mapping
+        s = s.replace("decode_helper", "decode_helper_non_ascii");
+    }
     let code = format_code(&s);
     file.write_all(code.as_bytes())?;
     Ok(())

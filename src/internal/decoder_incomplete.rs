@@ -61,6 +61,22 @@ pub(crate) fn decode_helper<'a>(
     }
 }
 
+/// Same as `decode_helper`, but have no optimizations for ascii.
+/// Needed by CP864 and EBCDIC codepages.
+#[inline(always)]
+pub(crate) fn decode_helper_non_ascii<'a>(
+    table: &Table,
+    bytes: &'a [u8],
+    fallback: Option<char>,
+) -> Result<Cow<'a, str>, DecodeError> {
+    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3);
+    // Safety: decode_slice expects buffer.len() >= src.len() * 3
+    let mut ptr = buffer.as_mut_ptr();
+    let fallback: Option<UTF8Entry> = fallback.map(UTF8Entry::from_char);
+    unsafe { decode_slice(table, &mut ptr, bytes, fallback) }?;
+    Ok(unsafe { finalize_string(buffer, ptr) }.into())
+}
+
 /// Lookup every byte in [`src`] using provided [`table`] and write resulting bytes to [`ptr`]
 /// # Safety
 ///
