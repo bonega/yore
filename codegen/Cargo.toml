@@ -11,3 +11,5 @@ publish = false
 codegen = { git = "https://github.com/bonega/codegen", branch = "associated-consts" }
 regex = "1.5.4"
 anyhow = "1.0.40"
+syn = "1.0.85"
+prettyplease = "0.1.0"
