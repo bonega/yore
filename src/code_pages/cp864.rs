@@ -1350,4 +1350,8 @@ impl Encoder for CP864 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }

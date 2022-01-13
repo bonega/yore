@@ -16,6 +16,7 @@ encoding_rs = "0.8.28"
 
 [dependencies.yore]
 path = ".."
+features = ["ebcdic"]
 
 # Prevent this from interfering with workspaces
 [workspace]

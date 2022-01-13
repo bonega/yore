@@ -1301,4 +1301,8 @@ impl Encoder for CP737 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }

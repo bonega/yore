@@ -1323,4 +1323,8 @@ impl Encoder for CP857 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }

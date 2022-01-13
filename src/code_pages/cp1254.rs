@@ -1298,4 +1298,8 @@ impl Encoder for CP1254 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }

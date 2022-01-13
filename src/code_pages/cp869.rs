@@ -1298,4 +1298,8 @@ impl Encoder for CP869 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }

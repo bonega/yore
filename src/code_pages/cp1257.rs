@@ -1333,4 +1333,8 @@ impl Encoder for CP1257 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }

@@ -1317,4 +1317,8 @@ impl Encoder for CP437 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }

@@ -1,3 +1,7 @@
+#[cfg(feature="ebcdic")]
+mod cp037;
+#[cfg(feature="ebcdic")]
+mod cp1140;
 mod cp1250;
 mod cp1251;
 mod cp1252;
@@ -23,6 +27,10 @@ mod cp866;
 mod cp869;
 mod cp874;
 
+#[cfg(feature="ebcdic")]
+pub use cp037::*;
+#[cfg(feature="ebcdic")]
+pub use cp1140::*;
 pub use cp1250::*;
 pub use cp1251::*;
 pub use cp1252::*;

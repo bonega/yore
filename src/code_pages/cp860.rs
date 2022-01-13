@@ -1311,4 +1311,8 @@ impl Encoder for CP860 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }

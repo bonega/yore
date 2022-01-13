@@ -17,7 +17,7 @@ pub trait Encoder {
         fallback: Option<u8>,
     ) -> Result<Cow<'a, [u8]>, EncodeError> {
         let mut src = s.as_bytes();
-        if s.is_ascii() {
+        if !self.is_ebcdic() && s.is_ascii() {
             return Ok(src.into());
         }
         let len = s.chars().count();
@@ -37,6 +37,7 @@ pub trait Encoder {
         unsafe { res.set_len(len) };
         Ok(res.into())
     }
+    fn is_ebcdic(&self) -> bool;
 }
 
 const USIZE_SIZE: usize = mem::size_of::<usize>();

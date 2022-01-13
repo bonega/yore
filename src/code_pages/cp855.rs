@@ -1285,4 +1285,8 @@ impl Encoder for CP855 {
             },
         )
     }
+    #[inline]
+    fn is_ebcdic(&self) -> bool {
+        false
+    }
 }
