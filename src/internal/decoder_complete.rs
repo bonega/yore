@@ -12,8 +12,8 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
         return s.into();
     }
 
-    let mut buffer: Vec<u8> = Vec::with_capacity(src.len() * 3);
-    // Safety: decode_slice expects buffer.len() >= src.len() * 3
+    let mut buffer: Vec<u8> = Vec::with_capacity(src.len() * 3 + 1);
+    // Safety: decode_slice expects buffer.len() >= src.len() * 3 + 1
     let mut ptr = buffer.as_mut_ptr();
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
@@ -50,12 +50,14 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 /// Lookup every byte in [`src`] using provided [`table`] and write resulting bytes to [`ptr`]
 /// # Safety
 ///
-/// This function is unsafe because it assumes that the buffer pointed to by [`ptr`] has a length >= src.len() * 3
+/// This function is unsafe because it assumes that the buffer pointed to by [`ptr`] has a length >= src.len() * 3 + 1
 #[inline]
 unsafe fn decode_slice(table: &Table, ptr: &mut *mut u8, src: &[u8]) {
     for b in src {
-        let UTF8Entry { buf, len } = table[*b as usize];
-        ptr.copy_from_nonoverlapping(buf.as_ptr(), 3);
+        let entry @ UTF8Entry { buf: _, len } = table[*b as usize];
+        // Safety: size of entry is 4 bytes starting with 3 bytes of UTF8
+        // ptr is only moved 1-3 bytes
+        (*ptr as *mut u32).write(std::mem::transmute(entry));
         *ptr = ptr.add(len as usize);
     }
 }

@@ -72,6 +72,7 @@ pub(crate) enum UTF8Len {
 
 #[derive(Copy, Clone)]
 pub(crate) struct UTF8Entry {
+    #[allow(dead_code)]
     pub buf: [u8; 3],
     pub len: UTF8Len,
 }
