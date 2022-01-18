@@ -94,4 +94,4 @@ fn do_something(code_page: &dyn CodePage, bytes: &[u8]) {
 `encoding_rs` supports only a few of the encodings that `oem_cp` and `yore` supports.
 Furthermore, the use case of `encoding_rs` is focused on streaming.
 
-See [bench crate](benchmark/README.md) for details
+See [bench crate](https://github.com/bonega/yore/blob/28198ff8d4e487a8f7e6a477fe7cbc19313618c0/benchmark/README.md) for details
