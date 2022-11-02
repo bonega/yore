@@ -54,10 +54,10 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 #[inline]
 unsafe fn decode_slice(table: &Table, ptr: &mut *mut u8, src: &[u8]) {
     for b in src {
-        let entry @ UTF8Entry { buf: _, len } = table[*b as usize];
+        let entry = table[*b as usize];
         // Safety: size of entry is 4 bytes starting with 3 bytes of UTF8
         // ptr is only moved 1-3 bytes
         (*ptr as *mut u32).write(std::mem::transmute(entry));
-        *ptr = ptr.add(len as usize);
+        *ptr = ptr.add(entry.len as usize);
     }
 }

@@ -88,16 +88,25 @@ unsafe fn decode_slice(
     src: &[u8],
     fallback: Option<UTF8Entry>,
 ) -> Result<(), DecodeError> {
-    for (i, b) in src.iter().enumerate() {
-        let entry @ UTF8Entry { buf: _, len } =
-            table[*b as usize].or(fallback).ok_or(DecodeError {
+    if let Some(fallback) = fallback {
+        for b in src.iter() {
+            let entry = table[*b as usize].unwrap_or(fallback);
+            // Safety: size of entry is 4 bytes starting with 3 bytes of UTF8
+            // ptr is only moved 1-3 bytes
+            (*ptr as *mut u32).write(std::mem::transmute(entry));
+            *ptr = ptr.add(entry.len as usize);
+        }
+    } else {
+        for (i, b) in src.iter().enumerate() {
+            let entry = table[*b as usize].ok_or(DecodeError {
                 position: i,
                 value: *b,
             })?;
-        // Safety: size of entry is 4 bytes starting with 3 bytes of UTF8
-        // ptr is only moved 1-3 bytes
-        (*ptr as *mut u32).write(std::mem::transmute(entry));
-        *ptr = ptr.add(len as usize);
+            // Safety: size of entry is 4 bytes starting with 3 bytes of UTF8
+            // ptr is only moved 1-3 bytes
+            (*ptr as *mut u32).write(std::mem::transmute(entry));
+            *ptr = ptr.add(entry.len as usize);
+        }
     }
     Ok(())
 }
