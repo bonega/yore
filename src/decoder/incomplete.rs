@@ -49,7 +49,7 @@ pub(crate) fn decode_helper<'a>(
                     e
                 })?;
             } else {
-                ptr.copy_from_nonoverlapping(mem::transmute(chunk), USIZE_SIZE);
+                ptr.copy_from_nonoverlapping(chunk as *const usize as *const u8, USIZE_SIZE);
                 ptr = ptr.add(USIZE_SIZE)
             }
         }

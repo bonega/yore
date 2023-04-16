@@ -37,7 +37,7 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
                     mem::transmute::<&usize, &[u8; USIZE_SIZE]>(chunk),
                 );
             } else {
-                ptr.copy_from_nonoverlapping(mem::transmute(chunk), USIZE_SIZE);
+                ptr.copy_from_nonoverlapping(chunk as *const usize as *const u8, USIZE_SIZE);
                 ptr = ptr.add(USIZE_SIZE)
             }
         }
