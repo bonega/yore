@@ -3,13 +3,15 @@ use std::borrow::Cow;
 use thiserror::Error;
 
 pub mod code_pages;
-mod internal;
+pub(crate) mod decoder;
+mod encoder;
+pub(crate) use encoder::Encoder;
 
 #[derive(Error, Debug)]
 #[error("Character in UTF-8 string has no mapping defined in code page")]
 pub struct EncodeError {}
 
-pub trait CodePage: crate::internal::Encoder {
+pub trait CodePage: Encoder {
     /// Encode UTF-8 string into single-byte encoding
     ///
     /// Undefined characters will result in [`EncodeError`]
@@ -110,4 +112,27 @@ pub trait CodePage: crate::internal::Encoder {
 pub struct DecodeError {
     pub position: usize,
     pub value: u8,
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::code_pages::CP864;
+
+    #[test]
+    fn test_nonstandard_ascii() {
+        let bytes = [0x25, 253];
+        //CP864 has nonstandard mapping for 0x25
+        let s = "٪ﻱ";
+        assert_eq!(CP864.decode(&bytes).unwrap(), s);
+        assert_eq!(bytes, *CP864.encode(s).unwrap());
+
+        //Standard '%' should still map to 0x25
+        let s = "%ﻱ";
+        assert_eq!(bytes, *CP864.encode(s).unwrap());
+
+        let s = "AAAAAAA٪";
+        let bytes = [65, 65, 65, 65, 65, 65, 65, 0x25];
+        //Should decode to nonstandard, even if whole usize-len is ascii
+        assert_eq!(CP864.decode(&bytes).unwrap(), s);
+    }
 }

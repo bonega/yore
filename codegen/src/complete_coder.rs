@@ -1,9 +1,10 @@
-use crate::{CodePage, DecodeError, EncodeError};
-use crate::internal::decoder_complete;
-use crate::internal::decoder_complete::decode_helper;
-use crate::internal::{Encoder, UTF8Entry, UTF8Len};
 use std::borrow::Cow;
 
+use crate::{
+    decoder::{self, complete::decode_helper, UTF8Entry, UTF8Len},
+    encoder::Encoder,
+    CodePage, DecodeError, EncodeError,
+};
 #[derive(Copy, Clone)]
 pub struct CODERSTRUCT;
 
@@ -63,4 +64,4 @@ impl CodePage for CODERSTRUCT {
     }
 }
 
-const DECODE_TABLE: decoder_complete::Table = PLACEHOLDER_TABLE;
+const DECODE_TABLE: decoder::complete::Table = PLACEHOLDER_TABLE;

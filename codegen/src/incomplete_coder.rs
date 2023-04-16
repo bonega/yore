@@ -1,7 +1,10 @@
-use crate::{CodePage, DecodeError, EncodeError};
-use crate::internal::{Encoder, UTF8Entry, UTF8Len};
-use crate::internal::decoder_incomplete::{decode_helper};
 use std::borrow::Cow;
+
+use crate::{
+    decoder::{self, incomplete::decode_helper, UTF8Entry, UTF8Len},
+    encoder::Encoder,
+    CodePage, DecodeError, EncodeError,
+};
 
 impl CODERSTRUCT {
     /// Decode CODERSTRUCT byte-encoding into UTF-8 string
@@ -54,7 +57,6 @@ impl CODERSTRUCT {
     pub fn decode_lossy_fallback(self, bytes: &[u8], fallback: char) -> Cow<str> {
         decode_helper(&DECODE_TABLE, bytes, Some(fallback)).unwrap()
     }
-
 
     /// Encode UTF-8 string into CODERSTRUCT byte-encoding
     ///
@@ -114,4 +116,4 @@ impl CodePage for CODERSTRUCT {
     }
 }
 
-const DECODE_TABLE: crate::internal::decoder_incomplete::Table = PLACEHOLDER_TABLE;
+const DECODE_TABLE: decoder::incomplete::Table = PLACEHOLDER_TABLE;

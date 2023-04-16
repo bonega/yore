@@ -1,7 +1,7 @@
 use core::mem;
 use std::borrow::Cow;
 
-use crate::internal::{contains_nonascii, finalize_string, UTF8Entry, USIZE_SIZE};
+use super::{contains_nonascii, finalize_string, UTF8Entry, USIZE_SIZE};
 
 pub(crate) type Table = [UTF8Entry; 256];
 
