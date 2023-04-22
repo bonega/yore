@@ -1,6 +1,6 @@
 [package]
 name = "yore"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Andreas Liljeqvist <bonega@gmail.com>"]
 edition = "2021"
 categories = ["encoding"]
