@@ -1,7 +1,7 @@
 use core::mem;
 use std::borrow::Cow;
 
-use super::{contains_nonascii, finalize_string, UTF8Entry, USIZE_SIZE};
+use super::{contains_nonascii, finalize_string, write_entry, UTF8Entry, USIZE_SIZE};
 
 pub(crate) type Table = [UTF8Entry; 256];
 
@@ -55,9 +55,6 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 unsafe fn decode_slice(table: &Table, ptr: &mut *mut u8, src: &[u8]) {
     for b in src {
         let entry = table[*b as usize];
-        // Safety: size of entry is 4 bytes starting with 3 bytes of UTF8
-        // ptr is only moved 1-3 bytes
-        (*ptr as *mut u32).write(std::mem::transmute(entry));
-        *ptr = ptr.add(entry.len as usize);
+        write_entry(entry, ptr);
     }
 }

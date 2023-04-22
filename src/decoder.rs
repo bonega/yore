@@ -57,3 +57,14 @@ impl UTF8Entry {
         }
     }
 }
+
+/// # Safety:
+///
+/// dst must have enough space for entry initially.
+/// size of entry is 4 bytes starting with 3 bytes of UTF8
+/// When the function finishes, dst will have moved 1-3 bytes
+#[inline]
+unsafe fn write_entry(entry: UTF8Entry, dst: &mut *mut u8) {
+    (*dst as *mut u32).write(std::mem::transmute(entry));
+    *dst = dst.add(entry.len as usize);
+}

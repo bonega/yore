@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 use crate::DecodeError;
 
-use super::{contains_nonascii, finalize_string, UTF8Entry, USIZE_SIZE};
+use super::{contains_nonascii, finalize_string, write_entry, UTF8Entry, USIZE_SIZE};
 
 pub(crate) type Table = [Option<UTF8Entry>; 256];
 
@@ -92,10 +92,7 @@ unsafe fn decode_slice(
     if let Some(fallback) = fallback {
         for b in src.iter() {
             let entry = table[*b as usize].unwrap_or(fallback);
-            // Safety: size of entry is 4 bytes starting with 3 bytes of UTF8
-            // ptr is only moved 1-3 bytes
-            (*ptr as *mut u32).write(std::mem::transmute(entry));
-            *ptr = ptr.add(entry.len as usize);
+            write_entry(entry, ptr);
         }
     } else {
         for (i, b) in src.iter().enumerate() {
@@ -103,10 +100,7 @@ unsafe fn decode_slice(
                 position: i,
                 value: *b,
             })?;
-            // Safety: size of entry is 4 bytes starting with 3 bytes of UTF8
-            // ptr is only moved 1-3 bytes
-            (*ptr as *mut u32).write(std::mem::transmute(entry));
-            *ptr = ptr.add(entry.len as usize);
+            write_entry(entry, ptr);
         }
     }
     Ok(())
