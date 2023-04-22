@@ -8,10 +8,10 @@ const USIZE_SIZE: usize = mem::size_of::<usize>();
 ///
 /// # Safety
 ///
-/// [`ptr`] must be within allocated capacity of [`res`]
+/// [`dst`] must be within allocated capacity of [`res`]
 #[inline]
-unsafe fn finalize_string(mut buffer: Vec<u8>, ptr: *const u8) -> String {
-    let length = ptr.offset_from(buffer.as_ptr()) as usize;
+unsafe fn finalize_string(mut buffer: Vec<u8>, dst: *const u8) -> String {
+    let length = dst.offset_from(buffer.as_ptr()) as usize;
     buffer.set_len(length);
     buffer.shrink_to_fit();
     String::from_utf8_unchecked(buffer)

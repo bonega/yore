@@ -21,7 +21,7 @@ pub(crate) fn decode_helper<'a>(
 
     let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
     // Safety: decode_slice expects buffer.len() >= src.len() * 3 + 1
-    let mut ptr = buffer.as_mut_ptr();
+    let mut dst = buffer.as_mut_ptr();
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
     // back to a scalar loop.
@@ -30,18 +30,18 @@ pub(crate) fn decode_helper<'a>(
     // sufficient alignment for `usize`, because it's a weird edge case.
     unsafe {
         if bytes.len() < USIZE_SIZE || USIZE_SIZE < mem::align_of::<usize>() {
-            decode_slice(table, &mut ptr, bytes, fallback)?;
-            return Ok(finalize_string(buffer, ptr).into());
+            decode_slice(table, bytes, &mut dst, fallback)?;
+            return Ok(finalize_string(buffer, dst).into());
         }
 
         let (prefix, aligned_bytes, suffix) = bytes.align_to::<usize>();
-        decode_slice(table, &mut ptr, prefix, fallback)?;
+        decode_slice(table, prefix, &mut dst, fallback)?;
         for (i, chunk) in aligned_bytes.iter().enumerate() {
             if contains_nonascii(*chunk) {
                 decode_slice(
                     table,
-                    &mut ptr,
                     mem::transmute::<&usize, &[u8; USIZE_SIZE]>(chunk),
+                    &mut dst,
                     fallback,
                 )
                 .map_err(|mut e| {
@@ -49,16 +49,16 @@ pub(crate) fn decode_helper<'a>(
                     e
                 })?;
             } else {
-                ptr.copy_from_nonoverlapping(chunk as *const usize as *const u8, USIZE_SIZE);
-                ptr = ptr.add(USIZE_SIZE)
+                dst.copy_from_nonoverlapping(chunk as *const usize as *const u8, USIZE_SIZE);
+                dst = dst.add(USIZE_SIZE)
             }
         }
 
-        decode_slice(table, &mut ptr, suffix, fallback).map_err(|mut e| {
+        decode_slice(table, suffix, &mut dst, fallback).map_err(|mut e| {
             e.position += prefix.len() + aligned_bytes.len() * USIZE_SIZE;
             e
         })?;
-        Ok(finalize_string(buffer, ptr).into())
+        Ok(finalize_string(buffer, dst).into())
     }
 }
 
@@ -72,27 +72,27 @@ pub(crate) fn decode_helper_non_ascii<'a>(
 ) -> Result<Cow<'a, str>, DecodeError> {
     let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
     // Safety: decode_slice expects buffer.len() >= src.len() * 3 + 1
-    let mut ptr = buffer.as_mut_ptr();
+    let mut dst = buffer.as_mut_ptr();
     let fallback: Option<UTF8Entry> = fallback.map(UTF8Entry::from_char);
-    unsafe { decode_slice(table, &mut ptr, bytes, fallback) }?;
-    Ok(unsafe { finalize_string(buffer, ptr) }.into())
+    unsafe { decode_slice(table, bytes, &mut dst, fallback) }?;
+    Ok(unsafe { finalize_string(buffer, dst) }.into())
 }
 
-/// Lookup every byte in [`src`] using provided [`table`] and write resulting bytes to [`ptr`]
+/// Lookup every byte in [`src`] using provided [`table`] and write resulting bytes to [`dst`]
 /// # Safety
 ///
-/// This function is unsafe because it assumes that the buffer pointed to by [`ptr`] has a length >= src.len() * 3 + 1
+/// This function is unsafe because it assumes that the buffer pointed to by [`dst`] has a length >= src.len() * 3 + 1
 #[inline]
 unsafe fn decode_slice(
     table: &Table,
-    ptr: &mut *mut u8,
     src: &[u8],
+    dst: &mut *mut u8,
     fallback: Option<UTF8Entry>,
 ) -> Result<(), DecodeError> {
     if let Some(fallback) = fallback {
         for b in src.iter() {
             let entry = table[*b as usize].unwrap_or(fallback);
-            write_entry(entry, ptr);
+            write_entry(entry, dst);
         }
     } else {
         for (i, b) in src.iter().enumerate() {
@@ -100,7 +100,7 @@ unsafe fn decode_slice(
                 position: i,
                 value: *b,
             })?;
-            write_entry(entry, ptr);
+            write_entry(entry, dst);
         }
     }
     Ok(())
