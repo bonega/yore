@@ -1,8 +1,6 @@
 use anyhow::{Context, Result};
 use std::fs::read_to_string;
 
-use regex::Regex;
-
 use crate::UnicodeMapping;
 
 pub fn parse_unicode_dot_org(path: &str) -> Result<UnicodeMapping> {
@@ -31,20 +29,30 @@ pub fn parse_unicode_dot_org(path: &str) -> Result<UnicodeMapping> {
 
 pub fn parse_whatwg(path: &str) -> Result<[Option<char>; 256]> {
     let s = read_to_string(path)?;
-    let re = Regex::new(r"(\d+)\t0x([0-9A-Za-f]{4})")?;
-    let m = re.captures_iter(&s);
     let mut res = [None; 256];
-    for (i, v) in res[..128].iter_mut().enumerate() {
-        *v = std::char::from_u32(i as u32);
+    for (codepoint, v) in res[..128].iter_mut().enumerate() {
+        *v = Some(codepoint as u8 as char);
     }
-    for cap in m {
-        let i: u8 = cap.get(1).context("no index entry")?.as_str().parse()?;
-        let c = char::from_u32(u32::from_str_radix(
-            cap.get(2).context("No unicode entry")?.as_str(),
+    for line in s.lines() {
+        if line.starts_with('#') || line.trim().is_empty() {
+            continue;
+        }
+
+        let mut tokens = line.split_whitespace();
+        let codepoint: u8 = tokens
+            .next()
+            .context("Failed to parse codepoint")?
+            .parse()?;
+        let unicode_val = u32::from_str_radix(
+            tokens
+                .next()
+                .context("Failed to parse unicode")?
+                .strip_prefix("0x")
+                .context("Failed to strip prefix")?,
             16,
-        )?)
-        .context("Not a valid char")?;
-        res[i as usize + 128] = Some(c);
+        )?;
+        let unicode_char = char::from_u32(unicode_val).context("Failed to parse char")?;
+        res[128 + codepoint as usize] = Some(unicode_char);
     }
     Ok(res)
 }
