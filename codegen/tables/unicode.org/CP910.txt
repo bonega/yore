@@ -1,12 +1,8 @@
 #
 #    Name:     cp910_IBM-PC_APL2_USA to Unicode table
-#    Unicode version: 2.0
-#    Table version: 2.00
-#    Table format:  Format A
-#    Date:          04/24/96
-#    Contact: Shawn.Steele@microsoft.com
 #                   
-#    General notes: none
+#    General notes: This is a custom mapping meant to track the wikipedia one: https://en.wikipedia.org/wiki/Digital_encoding_of_APL_symbols#Code_page_910
+#    It only uses the same format as the unicode.org mappings, and is in not any way provided by the unicode consortium
 #
 #    Format: Three tab-separated columns
 #        Column #1 is the cp910_IBM-PC_APL2_USA code (in hex)
@@ -271,5 +267,3 @@
 0xfd	0x203e	#OVERLINE
 0xfe	0x00a8	#DIAERESIS
 0xff	0x00a0	#NO-BREAK SPACE
-
-
