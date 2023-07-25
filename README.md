@@ -79,6 +79,7 @@ fn do_something(code_page: &dyn CodePage, bytes: &[u8]) {
 | 866        | cp866       | OEM Russian; Cyrillic (DOS)                                                                 |
 | 869        | ibm869      | OEM Modern Greek; Greek, Modern (DOS)                                                       |
 | 874        | windows-874 | Thai (Windows)                                                                              |
+| 910        | ibm910      | IBM-PC APL2
 | 1250       | windows-1250| ANSI Central European; Central European (Windows)                                           |
 | 1251       | windows-1251| ANSI Cyrillic; Cyrillic (Windows)                                                           |
 | 1252       | windows-1252| ANSI Latin 1; Western European (Windows)                                                    |

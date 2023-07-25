@@ -8,7 +8,7 @@ type UnicodeMapping = [Option<char>; 256];
 
 fn main() -> Result<()> {
     let unicode_dot_org_encodings = [
-        437, 737, 850, 852, 855, 857, 860, 861, 862, 863, 864, 865, 866, 869,
+        437, 737, 850, 852, 855, 857, 860, 861, 862, 863, 864, 865, 866, 869, 910,
     ];
     for cp in unicode_dot_org_encodings {
         let name = format!("CP{}", cp);

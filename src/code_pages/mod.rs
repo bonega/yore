@@ -22,6 +22,7 @@ mod cp865;
 mod cp866;
 mod cp869;
 mod cp874;
+mod cp910;
 
 pub use cp1250::*;
 pub use cp1251::*;
@@ -47,3 +48,4 @@ pub use cp865::*;
 pub use cp866::*;
 pub use cp869::*;
 pub use cp874::*;
+pub use cp910::*;

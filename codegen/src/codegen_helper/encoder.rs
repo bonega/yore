@@ -4,11 +4,23 @@ use codegen::{Block, Function, Impl};
 
 use crate::UnicodeMapping;
 
+fn dedup_by_end_byte(end_byte_to_codepoint: Vec<(u8, u8)>) -> Vec<(u8, u8)> {
+    let mut temp = end_byte_to_codepoint.clone();
+    temp.sort_by_key(|(b, _)| *b);
+    temp.dedup_by_key(|(b, _)| *b);
+    if temp.len() == end_byte_to_codepoint.len() {
+        end_byte_to_codepoint
+    } else {
+        temp
+    }
+}
+
 fn build_byte2_match(x: Byte2Map, target: &mut Block) {
-    for (first_byte, end_byte_to_codepoint) in x {
+    for (first_byte, mut end_byte_to_codepoint) in x {
         let mut body = Block::new(&format!("({:#2X}, [_,b, ..]) =>", first_byte));
         body.line("*bytes = &bytes[2..];");
         let mut second_body = Block::new("match b");
+        end_byte_to_codepoint = dedup_by_end_byte(end_byte_to_codepoint);
         for (second_byte, codepoint) in end_byte_to_codepoint {
             second_body.line(&format!("{:#2X} => {:#2X},", second_byte, codepoint));
         }
@@ -23,7 +35,8 @@ fn build_byte3_match(x: Byte3Map, target: &mut Block) {
         let mut first_body = Block::new(&format!("({:#2X}, [_,b, c, ..]) =>", first_byte));
         first_body.line("*bytes = &bytes[3..];");
         let mut second_body = Block::new("match b");
-        for (second_byte, end_byte_to_codepoint) in first_map {
+        for (second_byte, mut end_byte_to_codepoint) in first_map {
+            end_byte_to_codepoint = dedup_by_end_byte(end_byte_to_codepoint);
             let mut third_body = Block::new(&format!("{:#2X} => match c", second_byte));
             for (third_byte, codepoint) in end_byte_to_codepoint {
                 third_body.line(&format!("{:#2X} => {:#2X},", third_byte, codepoint));
