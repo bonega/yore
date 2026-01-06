@@ -19,7 +19,7 @@ impl CODERSTRUCT {
     /// assert_eq!(CODERSTRUCT.decode(&[116, 101, 120, 116]), "text");
     /// ```
     #[inline(always)]
-    pub fn decode(self, bytes: &[u8]) -> Cow<str> {
+    pub fn decode(self, bytes: &[u8]) -> Cow<'_, str> {
         decode_helper(&DECODE_TABLE, bytes)
     }
 
@@ -37,7 +37,7 @@ impl CODERSTRUCT {
     /// assert!(matches!(CODERSTRUCT.encode("text 🦀"), EncodeError));
     /// ```
     #[inline(always)]
-    pub fn encode(self, s: &str) -> Result<Cow<[u8]>, EncodeError> {
+    pub fn encode(self, s: &str) -> Result<Cow<'_, [u8]>, EncodeError> {
         self.encode_helper(s, None)
     }
 
@@ -53,7 +53,7 @@ impl CODERSTRUCT {
     /// assert_eq!(CODERSTRUCT.encode_lossy("text 🦀", 168), vec![116, 101, 120, 116, 32, 168]);
     /// ```
     #[inline(always)]
-    pub fn encode_lossy(self, s: &str, fallback: u8) -> Cow<[u8]> {
+    pub fn encode_lossy(self, s: &str, fallback: u8) -> Cow<'_, [u8]> {
         self.encode_helper(s, Some(fallback)).unwrap()
     }
 }

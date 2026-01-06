@@ -18,7 +18,7 @@ impl CP869 {
     /// assert_eq!(CP869.decode(&[116, 101, 120, 116]).unwrap(), "text");
     /// ```
     #[inline(always)]
-    pub fn decode(self, bytes: &[u8]) -> Result<Cow<str>, DecodeError> {
+    pub fn decode(self, bytes: &[u8]) -> Result<Cow<'_, str>, DecodeError> {
         decode_helper(&DECODE_TABLE, bytes, None)
     }
     /// Decode CP869 byte-encoding into UTF-8 string
@@ -33,7 +33,7 @@ impl CP869 {
     /// assert_eq!(CP869.decode_lossy(&[116, 101, 120, 116]), "text");
     /// ```
     #[inline(always)]
-    pub fn decode_lossy(self, bytes: &[u8]) -> Cow<str> {
+    pub fn decode_lossy(self, bytes: &[u8]) -> Cow<'_, str> {
         decode_helper(&DECODE_TABLE, bytes, Some('�')).unwrap()
     }
     /// Decode CP869 byte-encoding into UTF-8 string
@@ -51,7 +51,7 @@ impl CP869 {
     /// assert_eq!(CP869.decode_lossy_fallback(&[116, 101, 120, 116], '�'), "text");
     /// ```
     #[inline(always)]
-    pub fn decode_lossy_fallback(self, bytes: &[u8], fallback: char) -> Cow<str> {
+    pub fn decode_lossy_fallback(self, bytes: &[u8], fallback: char) -> Cow<'_, str> {
         decode_helper(&DECODE_TABLE, bytes, Some(fallback)).unwrap()
     }
     /// Encode UTF-8 string into CP869 byte-encoding
@@ -68,7 +68,7 @@ impl CP869 {
     /// assert!(matches!(CP869.encode("text 🦀"), EncodeError));
     /// ```
     #[inline(always)]
-    pub fn encode(self, s: &str) -> Result<Cow<[u8]>, EncodeError> {
+    pub fn encode(self, s: &str) -> Result<Cow<'_, [u8]>, EncodeError> {
         self.encode_helper(s, None)
     }
     /// Encode UTF-8 string into CP869 byte-encoding
@@ -83,7 +83,7 @@ impl CP869 {
     /// assert_eq!(CP869.encode_lossy("text 🦀", 168), vec![116, 101, 120, 116, 32, 168]);
     /// ```
     #[inline(always)]
-    pub fn encode_lossy(self, s: &str, fallback: u8) -> Cow<[u8]> {
+    pub fn encode_lossy(self, s: &str, fallback: u8) -> Cow<'_, [u8]> {
         self.encode_helper(s, Some(fallback)).unwrap()
     }
 }
