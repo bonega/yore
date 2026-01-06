@@ -45,15 +45,40 @@ jobs:
           cd fuzz
           nix develop --command cargo fuzz run invariant -- -max_total_time=60
 
+  codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v21
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+
+      - name: Run codegen
+        run: |
+          cd codegen
+          nix develop .. --command cargo run
+
+      - name: Check for uncommitted changes
+        run: |
+          if ! git diff --quiet; then
+            echo "Error: Codegen produced changes that are not committed"
+            echo "Please run 'cd codegen && cargo run' and commit the changes"
+            git diff --stat
+            exit 1
+          fi
+
   # Final job that depends on all other jobs - use this in branch protection rules
   ci-success:
     runs-on: ubuntu-latest
-    needs: [build-and-test, fuzz]
+    needs: [build-and-test, fuzz, codegen]
     if: always()
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.build-and-test.result }}" != "success" || "${{ needs.fuzz.result }}" != "success" ]]; then
+          if [[ "${{ needs.build-and-test.result }}" != "success" || "${{ needs.fuzz.result }}" != "success" || "${{ needs.codegen.result }}" != "success" ]]; then
             echo "One or more jobs failed"
             exit 1
           fi
