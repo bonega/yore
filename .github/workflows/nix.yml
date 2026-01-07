@@ -15,11 +15,6 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v21
 
-      - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
-        with:
-          use-flakehub: false
-
       - name: Build
         run: nix develop --command cargo build --verbose
 
@@ -33,11 +28,6 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v21
-
-      - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
-        with:
-          use-flakehub: false
 
       - name: Fuzz validate target
         run: |
@@ -56,11 +46,6 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v21
-
-      - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
-        with:
-          use-flakehub: false
 
       - name: Run codegen
         run: |
