@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-01-07
+- Remove unsafe code from encoder while improving encoding performance by ~40% for mostly-ASCII inputs
+
 ## [1.1.0] - 2023-07-26
 - Add support for cp910
 - Note that yore 1.0.0+ is compatible with Rust 1.71.0(there was an issue created that yore 0.3.3 has problem with that version of Rust)
