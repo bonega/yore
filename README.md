@@ -2,7 +2,7 @@
 
 A Rust library for decoding and encoding character sets based on OEM code pages.
 
-[![yore at crates.io](https://img.shields.io/badge/crates.io-1.1.0-blue)](https://crates.io/crates/yore)
+[![yore at crates.io](https://img.shields.io/badge/crates.io-1.2.0-blue)](https://crates.io/crates/yore)
 [![yore at docs.rs](https://docs.rs/yore/badge.svg)](https://docs.rs/yore)
 
 # Features
@@ -18,7 +18,7 @@ Add `yore` to your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-yore = "1.1.0"
+yore = "1.2.0"
 ```
 
 # Examples
