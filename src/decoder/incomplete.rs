@@ -44,14 +44,8 @@ impl Entry {
     /// After execution dst will be advanced by the number of bytes written.
     #[inline]
     pub unsafe fn write(self, dst: &mut *mut u8) {
-        match self.len {
-            Len::One => {
-                dst.write(self.buf[0]);
-            }
-            Len::Two | Len::Three => {
-                dst.copy_from_nonoverlapping(self.buf.as_ptr(), 3);
-            }
-        }
+        // Always copy 3 bytes (branchless), then advance by actual length
+        dst.copy_from_nonoverlapping(self.buf.as_ptr(), 3);
         *dst = dst.add(self.len as usize);
     }
 }
@@ -72,7 +66,6 @@ pub(crate) fn decode_helper<'a>(
     }
 
     let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3);
-    // Safety: decode_slice expects buffer.len() >= src.len() * 3
     let mut dst = buffer.as_mut_ptr();
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
@@ -123,17 +116,37 @@ pub(crate) fn decode_helper_non_ascii<'a>(
     fallback: Option<char>,
 ) -> Result<Cow<'a, str>, DecodeError> {
     let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3);
-    // Safety: decode_slice expects buffer.len() >= src.len() * 3
     let mut dst = buffer.as_mut_ptr();
     let fallback: Option<Entry> = fallback.map(Entry::from_char);
-    unsafe { decode_slice(table, bytes, &mut dst, fallback) }?;
+    unsafe { decode_slice_inner::<false>(table, bytes, &mut dst, fallback) }?;
     Ok(unsafe { finalize_string(buffer, dst) }.into())
 }
 
-/// Lookup every byte in [`src`] using provided [`table`] and write resulting bytes to [`dst`]
+/// Decode bytes using table lookup. ASCII_OPT enables fast path for ASCII bytes.
 /// # Safety
-///
-/// This function is unsafe because it assumes that the buffer pointed to by [`dst`] has a length >= src.len() * 3
+/// `dst` must point to a buffer with at least `src.len() * 3` bytes of writable space remaining.
+#[inline]
+unsafe fn decode_slice_inner<const ASCII_OPT: bool>(
+    table: &Table,
+    src: &[u8],
+    dst: &mut *mut u8,
+    fallback: Option<Entry>,
+) -> Result<(), DecodeError> {
+    for (i, &b) in src.iter().enumerate() {
+        if ASCII_OPT && b < 128 {
+            dst.write(b);
+            *dst = dst.add(1);
+        } else if let Some(fallback) = fallback {
+            table[b as usize].unwrap_or(fallback).write(dst);
+        } else {
+            table[b as usize]
+                .ok_or(DecodeError { position: i, value: b })?
+                .write(dst);
+        }
+    }
+    Ok(())
+}
+
 #[inline]
 unsafe fn decode_slice(
     table: &Table,
@@ -141,19 +154,5 @@ unsafe fn decode_slice(
     dst: &mut *mut u8,
     fallback: Option<Entry>,
 ) -> Result<(), DecodeError> {
-    if let Some(fallback) = fallback {
-        for b in src.iter() {
-            let entry = table[*b as usize].unwrap_or(fallback);
-            entry.write(dst);
-        }
-    } else {
-        for (i, b) in src.iter().enumerate() {
-            let entry = table[*b as usize].ok_or(DecodeError {
-                position: i,
-                value: *b,
-            })?;
-            entry.write(dst);
-        }
-    }
-    Ok(())
+    decode_slice_inner::<true>(table, src, dst, fallback)
 }
