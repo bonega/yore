@@ -1,9 +1,9 @@
 use core::mem;
 use std::borrow::Cow;
 
-use super::{contains_nonascii, finalize_string, write_entry, UTF8Entry, USIZE_SIZE};
+use super::{contains_nonascii, finalize_string, write_complete_entry, CompleteEntry, USIZE_SIZE};
 
-pub(crate) type Table = [UTF8Entry; 256];
+pub(crate) type Table = [CompleteEntry; 256];
 
 #[inline(always)]
 pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
@@ -12,7 +12,8 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
         return s.into();
     }
 
-    let mut buffer: Vec<u8> = Vec::with_capacity(src.len() * 3);
+    // +1 for branchless 4-byte write which may overshoot by 1 byte
+    let mut buffer: Vec<u8> = Vec::with_capacity(src.len() * 3 + 1);
     // Safety: decode_slice expects buffer.len() >= src.len() * 3
     let mut dst = buffer.as_mut_ptr();
 
@@ -51,7 +52,8 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 /// Needed by CP864 and EBCDIC codepages.
 #[inline(always)]
 pub(crate) fn decode_helper_non_ascii<'a>(table: &Table, bytes: &'a [u8]) -> Cow<'a, str> {
-    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3);
+    // +1 for branchless 4-byte write which may overshoot by 1 byte
+    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
     // Safety: decode_slice expects buffer.len() >= src.len() * 3
     let mut dst = buffer.as_mut_ptr();
     unsafe { decode_slice(table, bytes, &mut dst) };
@@ -66,6 +68,6 @@ pub(crate) fn decode_helper_non_ascii<'a>(table: &Table, bytes: &'a [u8]) -> Cow
 unsafe fn decode_slice(table: &Table, src: &[u8], dst: &mut *mut u8) {
     for b in src {
         let entry = table[*b as usize];
-        write_entry(entry, dst);
+        write_complete_entry(entry, dst);
     }
 }

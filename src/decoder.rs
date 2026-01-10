@@ -24,6 +24,7 @@ fn contains_nonascii(v: usize) -> bool {
     (NONASCII_MASK & v) != 0
 }
 
+/// UTF8 length enum for incomplete tables (enables niche optimization with Option)
 #[derive(Copy, Clone)]
 #[repr(u8)]
 pub(crate) enum UTF8Len {
@@ -33,15 +34,15 @@ pub(crate) enum UTF8Len {
     //Four is not allowed in this library
 }
 
+/// Entry for incomplete tables - uses UTF8Len for niche-optimized Option<UTF8Entry>
 #[derive(Copy, Clone)]
 pub(crate) struct UTF8Entry {
-    #[allow(dead_code)]
     pub buf: [u8; 3],
     pub len: UTF8Len,
 }
 
 impl UTF8Entry {
-    fn from_char(c: char) -> Self {
+    pub fn from_char(c: char) -> Self {
         let c_len = c.len_utf8();
         assert!(c_len < 4);
         let mut buf = [0; 3];
@@ -74,4 +75,21 @@ unsafe fn write_entry(entry: UTF8Entry, dst: &mut *mut u8) {
         }
     }
     *dst = dst.add(entry.len as usize);
+}
+
+/// Entry for complete/lossy tables - optimized for branchless 4-byte writes
+/// Layout: [buf[0], buf[1], buf[2], len] for direct u32 store
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub(crate) struct CompleteEntry {
+    pub buf: [u8; 3],
+    pub len: u8,
+}
+
+/// Branchless write for complete tables
+#[inline]
+unsafe fn write_complete_entry(entry: CompleteEntry, dst: &mut *mut u8) {
+    let word: u32 = mem::transmute(entry);
+    dst.cast::<u32>().write_unaligned(word);
+    *dst = dst.add((word >> 24) as usize);
 }

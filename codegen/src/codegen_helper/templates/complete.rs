@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use crate::{
-    decoder::{self, complete::decode_helper, UTF8Entry, UTF8Len},
+    decoder::{self, complete::decode_helper, CompleteEntry},
     encoder::Encoder,
     CodePage, DecodeError, EncodeError,
 };

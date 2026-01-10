@@ -5,6 +5,7 @@ use crate::DecodeError;
 
 use super::{contains_nonascii, finalize_string, write_entry, UTF8Entry, USIZE_SIZE};
 
+/// Table for incomplete codepages using Option for niche optimization
 pub(crate) type Table = [Option<UTF8Entry>; 256];
 
 #[inline(always)]

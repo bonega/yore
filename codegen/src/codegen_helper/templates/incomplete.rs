@@ -1,7 +1,12 @@
 use std::borrow::Cow;
 
 use crate::{
-    decoder::{self, incomplete::decode_helper, UTF8Entry, UTF8Len},
+    decoder::{
+        self,
+        complete::decode_helper as decode_helper_lossy,
+        incomplete::decode_helper,
+        CompleteEntry, UTF8Entry, UTF8Len,
+    },
     encoder::Encoder,
     CodePage, DecodeError, EncodeError,
 };
@@ -36,7 +41,7 @@ impl CODERSTRUCT {
     /// ```
     #[inline(always)]
     pub fn decode_lossy(self, bytes: &[u8]) -> Cow<'_, str> {
-        decode_helper(&DECODE_TABLE, bytes, Some('�')).unwrap()
+        decode_helper_lossy(&DECODE_TABLE_LOSSY, bytes)
     }
 
     /// Decode CODERSTRUCT byte-encoding into UTF-8 string
@@ -117,3 +122,4 @@ impl CodePage for CODERSTRUCT {
 }
 
 const DECODE_TABLE: decoder::incomplete::Table = PLACEHOLDER_TABLE;
+const DECODE_TABLE_LOSSY: decoder::complete::Table = PLACEHOLDER_LOSSY_TABLE;
