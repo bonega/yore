@@ -49,9 +49,9 @@ pub fn build_incomplete_lossy_decode_table(definition: UnicodeMapping) -> String
 
 fn len_to_variant(len: usize) -> &'static str {
     match len {
-        1 => "UTF8Len::One",
-        2 => "UTF8Len::Two",
-        3 => "UTF8Len::Three",
+        1 => "IncompleteLen::One",
+        2 => "IncompleteLen::Two",
+        3 => "IncompleteLen::Three",
         _ => panic!("Invalid UTF8 length"),
     }
 }
@@ -65,7 +65,7 @@ pub fn build_incomplete_decode_table(definition: UnicodeMapping) -> String {
             Some(c) => {
                 let (encoded, len) = encode_char(c, &mut buffer);
                 format!(
-                    "Some(UTF8Entry{{buf: {}, len: {}}}),\n",
+                    "Some(IncompleteEntry{{buf: {}, len: {}}}),\n",
                     format_bytes(encoded),
                     len_to_variant(len)
                 )

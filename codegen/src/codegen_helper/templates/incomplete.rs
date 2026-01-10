@@ -5,7 +5,7 @@ use crate::{
         self,
         complete::decode_helper as decode_helper_lossy,
         incomplete::decode_helper,
-        CompleteEntry, UTF8Entry, UTF8Len,
+        CompleteEntry, IncompleteEntry, IncompleteLen,
     },
     encoder::Encoder,
     CodePage, DecodeError, EncodeError,
