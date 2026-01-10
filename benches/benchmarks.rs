@@ -137,6 +137,12 @@ fn bench(c: &mut Criterion) {
     decode_checked(c, "decode_checked/ascii", sizes, sample_ascii_bytes);
     decode_checked(c, "decode_checked/extended", sizes, sample_extended_bytes);
     decode_lossy(c, "decode_lossy/all_bad", sizes, all_bad_bytes);
+    decode_lossy(
+        c,
+        "decode_lossy/mostly_ascii",
+        sizes,
+        sample_mostly_ascii_bytes,
+    );
 
     encode_checked(
         c,
