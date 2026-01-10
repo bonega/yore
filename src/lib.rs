@@ -116,7 +116,8 @@ pub struct DecodeError {
 
 #[cfg(test)]
 mod tests {
-    use crate::code_pages::CP864;
+    use crate::code_pages::{CP857, CP864, CP869, CP874, CP1253, CP1255, CP1257};
+    use crate::CodePage;
 
     #[test]
     fn test_nonstandard_ascii() {
@@ -134,5 +135,25 @@ mod tests {
         let bytes = [65, 65, 65, 65, 65, 65, 65, 0x25];
         //Should decode to nonstandard, even if whole usize-len is ascii
         assert_eq!(CP864.decode(&bytes).unwrap(), s);
+    }
+
+    /// Verify that code pages using the ASCII-optimized decode path
+    /// have standard ASCII mappings for bytes 0-127.
+    #[test]
+    fn verify_ascii_optimized_codepages() {
+        let codepages: &[&dyn CodePage] = &[&CP857, &CP869, &CP874, &CP1253, &CP1255, &CP1257];
+        for cp in codepages {
+            for b in 0u8..128 {
+                let bytes = [b];
+                let expected = std::str::from_utf8(&bytes).unwrap();
+                match cp.decode(&bytes) {
+                    Ok(decoded) => assert_eq!(
+                        &*decoded, expected,
+                        "byte {b} should decode to ASCII '{expected}'"
+                    ),
+                    Err(_) => {} // undefined is fine
+                }
+            }
+        }
     }
 }
