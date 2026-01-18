@@ -106,8 +106,8 @@ jobs:
           # Fail the workflow if performance regresses by more than 20%
           fail-on-alert: true
           fail-threshold: '120%'
-          # Store results for comparison (only on master)
-          auto-push: ${{ github.ref == 'refs/heads/master' }}
+          # Disable auto-push (requires gh-pages branch setup)
+          auto-push: false
           # Compare against previous results
           comment-always: true
 
