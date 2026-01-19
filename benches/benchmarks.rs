@@ -1,4 +1,9 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use std::time::Duration;
+
+use criterion::{
+    criterion_group, criterion_main, measurement::WallTime, BenchmarkGroup, BenchmarkId, Criterion,
+    Throughput,
+};
 use rand::distributions::uniform::SampleRange;
 use rand::distributions::{Distribution, WeightedIndex};
 
@@ -6,6 +11,19 @@ use rand::{RngCore, SeedableRng};
 use rand_pcg::{Lcg128Xsl64, Pcg64};
 
 use yore::code_pages::CP874;
+
+/// Configure benchmark timing based on input size.
+/// Smaller inputs need less time since they run many more iterations.
+fn configure_for_size(group: &mut BenchmarkGroup<WallTime>, size: usize) {
+    let (warm_up_ms, measurement_ms) = match size {
+        0..=64 => (100, 200),
+        65..=512 => (100, 300),
+        _ => (200, 500),
+    };
+    group
+        .warm_up_time(Duration::from_millis(warm_up_ms))
+        .measurement_time(Duration::from_millis(measurement_ms));
+}
 
 fn encode_checked(
     c: &mut Criterion,
@@ -16,6 +34,7 @@ fn encode_checked(
     let mut group = c.benchmark_group(label);
     let mut rng_yore = Pcg64::seed_from_u64(42);
     for size in sizes {
+        configure_for_size(&mut group, *size);
         group
             .throughput(Throughput::Bytes(*size as u64))
             .bench_with_input(BenchmarkId::from_parameter(size), size, |b, size| {
@@ -35,6 +54,7 @@ fn encode_lossy(
     let mut group = c.benchmark_group(label);
     let mut rng_yore = Pcg64::seed_from_u64(42);
     for size in sizes {
+        configure_for_size(&mut group, *size);
         group
             .throughput(Throughput::Bytes(*size as u64))
             .bench_with_input(BenchmarkId::from_parameter(size), size, |b, size| {
@@ -54,6 +74,7 @@ fn decode_checked(
     let mut rng_yore = Pcg64::seed_from_u64(42);
     let mut group = c.benchmark_group(label);
     for size in sizes {
+        configure_for_size(&mut group, *size);
         group
             .throughput(Throughput::Bytes(*size as u64))
             .bench_with_input(BenchmarkId::from_parameter(size), size, |b, size| {
@@ -73,6 +94,7 @@ fn decode_lossy(
     let mut rng_yore = Pcg64::seed_from_u64(42);
     let mut group = c.benchmark_group(label);
     for size in sizes {
+        configure_for_size(&mut group, *size);
         group
             .throughput(Throughput::Bytes(*size as u64))
             .bench_with_input(BenchmarkId::from_parameter(size), size, |b, size| {
@@ -155,5 +177,9 @@ fn bench(c: &mut Criterion) {
     encode_lossy(c, "encode_lossy/all_bad", sizes, all_bad_strings);
 }
 
-criterion_group!(benches, bench);
+criterion_group! {
+    name = benches;
+    config = Criterion::default().nresamples(10_000);
+    targets = bench
+}
 criterion_main!(benches);
