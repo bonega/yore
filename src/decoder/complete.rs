@@ -31,7 +31,7 @@ pub(crate) type Table = [Entry; 256];
 
 #[inline(always)]
 pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
-    if src.is_ascii() {
+    if crate::is_ascii(src) {
         let s = unsafe { std::str::from_utf8_unchecked(src) };
         return s.into();
     }
