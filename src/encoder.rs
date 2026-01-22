@@ -12,7 +12,7 @@ pub trait Encoder {
         fallback: Option<u8>,
     ) -> Result<Cow<'a, [u8]>, EncodeError> {
         let mut src = s.as_bytes();
-        if s.is_ascii() {
+        if crate::is_ascii_str(s) {
             return Ok(src.into());
         }
         let len = s.chars().count();

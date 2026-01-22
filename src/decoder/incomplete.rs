@@ -60,7 +60,7 @@ pub(crate) fn decode_helper<'a>(
     fallback: Option<char>,
 ) -> Result<Cow<'a, str>, DecodeError> {
     let fallback: Option<Entry> = fallback.map(Entry::from_char);
-    if bytes.is_ascii() {
+    if crate::is_ascii(bytes) {
         let s = unsafe { std::str::from_utf8_unchecked(bytes) };
         return Ok(s.into());
     }
