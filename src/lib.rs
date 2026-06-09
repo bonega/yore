@@ -5,9 +5,7 @@ use thiserror::Error;
 pub mod code_pages;
 pub(crate) mod decoder;
 mod encoder;
-mod simd;
 pub(crate) use encoder::Encoder;
-pub(crate) use simd::{is_ascii, is_ascii_str};
 
 #[derive(Error, Debug)]
 #[error("Character in UTF-8 string has no mapping defined in code page")]
