@@ -1,15 +1,21 @@
 use std::borrow::Cow;
-
-use thiserror::Error;
+use std::fmt;
 
 pub mod code_pages;
 pub(crate) mod decoder;
 mod encoder;
 pub(crate) use encoder::Encoder;
 
-#[derive(Error, Debug)]
-#[error("Character in UTF-8 string has no mapping defined in code page")]
+#[derive(Debug)]
 pub struct EncodeError {}
+
+impl fmt::Display for EncodeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Character in UTF-8 string has no mapping defined in code page")
+    }
+}
+
+impl std::error::Error for EncodeError {}
 
 pub trait CodePage: Encoder {
     /// Encode UTF-8 string into single-byte encoding
@@ -107,12 +113,23 @@ pub trait CodePage: Encoder {
     }
 }
 
-#[derive(Error, Debug)]
-#[error("Undefined codepoint {value} at offset {position}")]
+#[derive(Debug)]
 pub struct DecodeError {
     pub position: usize,
     pub value: u8,
 }
+
+impl fmt::Display for DecodeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Undefined codepoint {} at offset {}",
+            self.value, self.position
+        )
+    }
+}
+
+impl std::error::Error for DecodeError {}
 
 #[cfg(test)]
 mod tests {

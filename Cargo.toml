@@ -1,6 +1,6 @@
 [package]
 name = "yore"
-version = "1.3.0"
+version = "1.3.1"
 authors = ["Andreas Liljeqvist <bonega@gmail.com>"]
 edition = "2021"
 categories = ["encoding"]
@@ -12,7 +12,6 @@ repository = "https://github.com/bonega/yore/"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "1.0.25"
 
 [lib]
 bench = false
