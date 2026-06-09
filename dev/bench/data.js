@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769120103435,
+  "lastUpdate": 1781033805543,
   "repoUrl": "https://github.com/bonega/yore",
   "entries": {
     "Yore Benchmarks": [
@@ -803,6 +803,408 @@ window.BENCHMARK_DATA = {
             "name": "encode_lossy/all_bad/4096",
             "value": 13475,
             "range": "± 61",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "bonega@gmail.com",
+            "name": "Andreas Liljeqvist",
+            "username": "bonega"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c6a2ee5b0ec196716e317a217695a73676efaf4a",
+          "message": "Revert \"perf: add AVX512-optimized is_ascii to fix native CPU regression (#22)\" (#23)\n\nThis reverts commit 65ad00d8c0db0efac173a09f885508d9e1ac2037.",
+          "timestamp": "2026-06-09T19:34:13Z",
+          "tree_id": "9345bfd822c9229dd2e95cd734e150c52fba5203",
+          "url": "https://github.com/bonega/yore/commit/c6a2ee5b0ec196716e317a217695a73676efaf4a"
+        },
+        "date": 1781033804646,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "decode_checked/mostly_ascii/8",
+            "value": 32,
+            "range": "± 11",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/64",
+            "value": 63,
+            "range": "± 5",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/256",
+            "value": 128,
+            "range": "± 10",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/512",
+            "value": 207,
+            "range": "± 16",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/1024",
+            "value": 369,
+            "range": "± 18",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/2048",
+            "value": 790,
+            "range": "± 42",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/4096",
+            "value": 1785,
+            "range": "± 55",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/8",
+            "value": 8,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/64",
+            "value": 8,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/256",
+            "value": 10,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/512",
+            "value": 15,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/1024",
+            "value": 24,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/2048",
+            "value": 49,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/4096",
+            "value": 89,
+            "range": "± 8",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/8",
+            "value": 34,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/64",
+            "value": 84,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/256",
+            "value": 259,
+            "range": "± 29",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/512",
+            "value": 476,
+            "range": "± 8",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/1024",
+            "value": 901,
+            "range": "± 149",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/2048",
+            "value": 1750,
+            "range": "± 14",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/4096",
+            "value": 3455,
+            "range": "± 24",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/8",
+            "value": 40,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/64",
+            "value": 63,
+            "range": "± 8",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/256",
+            "value": 174,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/512",
+            "value": 323,
+            "range": "± 15",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/1024",
+            "value": 625,
+            "range": "± 9",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/2048",
+            "value": 1211,
+            "range": "± 12",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/4096",
+            "value": 2403,
+            "range": "± 42",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/8",
+            "value": 39,
+            "range": "± 15",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/64",
+            "value": 72,
+            "range": "± 7",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/256",
+            "value": 156,
+            "range": "± 15",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/512",
+            "value": 245,
+            "range": "± 20",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/1024",
+            "value": 428,
+            "range": "± 23",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/2048",
+            "value": 798,
+            "range": "± 33",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/4096",
+            "value": 1551,
+            "range": "± 49",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/8",
+            "value": 42,
+            "range": "± 17",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/64",
+            "value": 139,
+            "range": "± 11",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/256",
+            "value": 491,
+            "range": "± 12",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/512",
+            "value": 924,
+            "range": "± 41",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/1024",
+            "value": 1815,
+            "range": "± 25",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/2048",
+            "value": 4080,
+            "range": "± 157",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/4096",
+            "value": 8895,
+            "range": "± 202",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/8",
+            "value": 8,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/64",
+            "value": 8,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/256",
+            "value": 11,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/512",
+            "value": 14,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/1024",
+            "value": 24,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/2048",
+            "value": 49,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/4096",
+            "value": 89,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/8",
+            "value": 52,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/64",
+            "value": 202,
+            "range": "± 38",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/256",
+            "value": 706,
+            "range": "± 6",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/512",
+            "value": 1379,
+            "range": "± 23",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/1024",
+            "value": 2740,
+            "range": "± 23",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/2048",
+            "value": 5407,
+            "range": "± 24",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/4096",
+            "value": 10766,
+            "range": "± 607",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/8",
+            "value": 52,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/64",
+            "value": 229,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/256",
+            "value": 801,
+            "range": "± 4",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/512",
+            "value": 1565,
+            "range": "± 26",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/1024",
+            "value": 3101,
+            "range": "± 18",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/2048",
+            "value": 6135,
+            "range": "± 52",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/4096",
+            "value": 12220,
+            "range": "± 173",
             "unit": "ns/iter"
           }
         ]
