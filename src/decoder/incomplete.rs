@@ -1,5 +1,6 @@
-use std::borrow::Cow;
-use std::mem;
+use alloc::borrow::Cow;
+use alloc::vec::Vec;
+use core::mem;
 
 use crate::DecodeError;
 
@@ -61,7 +62,7 @@ pub(crate) fn decode_helper<'a>(
 ) -> Result<Cow<'a, str>, DecodeError> {
     let fallback: Option<Entry> = fallback.map(Entry::from_char);
     if bytes.is_ascii() {
-        let s = unsafe { std::str::from_utf8_unchecked(bytes) };
+        let s = unsafe { core::str::from_utf8_unchecked(bytes) };
         return Ok(s.into());
     }
 

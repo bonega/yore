@@ -13,9 +13,12 @@
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system; inherit overlays; };
 
-        # Stable Rust toolchain for regular development
+        # Stable Rust toolchain for regular development.
+        # The bare-metal `thumbv7em-none-eabi` target (no std) is included so
+        # `no_std` builds can be verified in CI.
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
           extensions = [ "rust-src" "rust-analyzer" ];
+          targets = [ "thumbv7em-none-eabi" ];
         };
       in
       {

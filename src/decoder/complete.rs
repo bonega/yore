@@ -1,5 +1,6 @@
-use std::borrow::Cow;
-use std::mem;
+use alloc::borrow::Cow;
+use alloc::vec::Vec;
+use core::mem;
 
 use super::{contains_nonascii, finalize_string, USIZE_SIZE};
 
@@ -32,7 +33,7 @@ pub(crate) type Table = [Entry; 256];
 #[inline(always)]
 pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
     if src.is_ascii() {
-        let s = unsafe { std::str::from_utf8_unchecked(src) };
+        let s = unsafe { core::str::from_utf8_unchecked(src) };
         return s.into();
     }
 
