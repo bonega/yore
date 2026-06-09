@@ -133,7 +133,7 @@ impl std::error::Error for DecodeError {}
 
 #[cfg(test)]
 mod tests {
-    use crate::code_pages::{CP857, CP864, CP869, CP874, CP1253, CP1255, CP1257};
+    use crate::code_pages::{CP1253, CP1255, CP1257, CP857, CP864, CP869, CP874};
     use crate::CodePage;
 
     #[test]
@@ -163,12 +163,12 @@ mod tests {
             for b in 0u8..128 {
                 let bytes = [b];
                 let expected = std::str::from_utf8(&bytes).unwrap();
-                match cp.decode(&bytes) {
-                    Ok(decoded) => assert_eq!(
+                // undefined byte mappings are fine; only check the ones that decode
+                if let Ok(decoded) = cp.decode(&bytes) {
+                    assert_eq!(
                         &*decoded, expected,
                         "byte {b} should decode to ASCII '{expected}'"
-                    ),
-                    Err(_) => {} // undefined is fine
+                    );
                 }
             }
         }

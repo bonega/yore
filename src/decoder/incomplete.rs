@@ -140,7 +140,10 @@ unsafe fn decode_slice_inner<const ASCII_OPT: bool>(
             table[b as usize].unwrap_or(fallback).write(dst);
         } else {
             table[b as usize]
-                .ok_or(DecodeError { position: i, value: b })?
+                .ok_or(DecodeError {
+                    position: i,
+                    value: b,
+                })?
                 .write(dst);
         }
     }

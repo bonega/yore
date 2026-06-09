@@ -75,6 +75,22 @@ pub fn generate_code(name: &str, definition: UnicodeMapping) -> Result<String> {
 }
 
 fn format_code(value: &str) -> Result<String> {
-    let syntax_tree = syn::parse_file(value)?;
-    Ok(prettyplease::unparse(&syntax_tree))
+    use std::io::Write as _;
+    use std::process::{Command, Stdio};
+
+    let mut child = Command::new("rustfmt")
+        .args(["--edition", "2021", "--emit", "stdout"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()?;
+    child
+        .stdin
+        .take()
+        .expect("rustfmt stdin")
+        .write_all(value.as_bytes())?;
+    let output = child.wait_with_output()?;
+    if !output.status.success() {
+        anyhow::bail!("rustfmt exited with status {}", output.status);
+    }
+    Ok(String::from_utf8(output.stdout)?)
 }
