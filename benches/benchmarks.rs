@@ -108,7 +108,7 @@ fn decode_lossy(
 fn sample_mostly_ascii_bytes(rng: &mut impl RngCore, n: usize) -> Vec<u8> {
     let choices = [65, 161];
     let weights = [9, 1];
-    let dist = WeightedIndex::new(&weights).unwrap();
+    let dist = WeightedIndex::new(weights).unwrap();
     dist.sample_iter(rng).take(n).map(|i| choices[i]).collect()
 }
 
@@ -123,7 +123,7 @@ fn sample_extended_bytes(rng: &mut impl RngCore, n: usize) -> Vec<u8> {
 fn sample_mostly_ascii_strings(rng: &mut impl RngCore, n: usize) -> String {
     let choices = ['a', 'ส'];
     let weights = [9, 1];
-    let dist = WeightedIndex::new(&weights).unwrap();
+    let dist = WeightedIndex::new(weights).unwrap();
     dist.sample_iter(rng).take(n).map(|i| choices[i]).collect()
 }
 

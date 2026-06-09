@@ -19,11 +19,7 @@ pub trait Encoder {
         let mut res = Vec::with_capacity(len);
 
         // extend uses iterator size hint to skip per-element capacity checks
-        res.extend(
-            (0..len)
-                .map(|_| self.encode_grapheme(&mut src).or(fallback))
-                .flatten(),
-        );
+        res.extend((0..len).filter_map(|_| self.encode_grapheme(&mut src).or(fallback)));
 
         // If any encoding failed, we got fewer bytes than expected
         if res.len() != len {
