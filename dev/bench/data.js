@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781034543735,
+  "lastUpdate": 1781035124290,
   "repoUrl": "https://github.com/bonega/yore",
   "entries": {
     "Yore Benchmarks": [
@@ -1607,6 +1607,408 @@ window.BENCHMARK_DATA = {
             "name": "encode_lossy/all_bad/4096",
             "value": 12224,
             "range": "± 165",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "bonega@gmail.com",
+            "name": "Andreas Liljeqvist",
+            "username": "bonega"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ec50c69e69633bf2bee8b98c50930db5ec9b86e2",
+          "message": "docs: update version references from 1.3.0 to 1.3.1 (#25)",
+          "timestamp": "2026-06-09T19:56:04Z",
+          "tree_id": "8222b4f2d5bb08549e289580f55054d0db690953",
+          "url": "https://github.com/bonega/yore/commit/ec50c69e69633bf2bee8b98c50930db5ec9b86e2"
+        },
+        "date": 1781035123361,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "decode_checked/mostly_ascii/8",
+            "value": 34,
+            "range": "± 13",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/64",
+            "value": 65,
+            "range": "± 6",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/256",
+            "value": 138,
+            "range": "± 13",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/512",
+            "value": 227,
+            "range": "± 18",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/1024",
+            "value": 407,
+            "range": "± 33",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/2048",
+            "value": 871,
+            "range": "± 46",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/mostly_ascii/4096",
+            "value": 1954,
+            "range": "± 66",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/8",
+            "value": 8,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/64",
+            "value": 8,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/256",
+            "value": 10,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/512",
+            "value": 15,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/1024",
+            "value": 25,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/2048",
+            "value": 50,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/ascii/4096",
+            "value": 90,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/8",
+            "value": 37,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/64",
+            "value": 85,
+            "range": "± 4",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/256",
+            "value": 261,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/512",
+            "value": 494,
+            "range": "± 58",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/1024",
+            "value": 906,
+            "range": "± 5",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/2048",
+            "value": 1766,
+            "range": "± 17",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_checked/extended/4096",
+            "value": 3487,
+            "range": "± 20",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/8",
+            "value": 39,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/64",
+            "value": 62,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/256",
+            "value": 173,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/512",
+            "value": 323,
+            "range": "± 9",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/1024",
+            "value": 623,
+            "range": "± 8",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/2048",
+            "value": 1212,
+            "range": "± 16",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/all_bad/4096",
+            "value": 2395,
+            "range": "± 24",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/8",
+            "value": 39,
+            "range": "± 16",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/64",
+            "value": 64,
+            "range": "± 6",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/256",
+            "value": 149,
+            "range": "± 16",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/512",
+            "value": 238,
+            "range": "± 20",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/1024",
+            "value": 416,
+            "range": "± 25",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/2048",
+            "value": 791,
+            "range": "± 37",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "decode_lossy/mostly_ascii/4096",
+            "value": 1540,
+            "range": "± 47",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/8",
+            "value": 42,
+            "range": "± 17",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/64",
+            "value": 139,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/256",
+            "value": 485,
+            "range": "± 19",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/512",
+            "value": 974,
+            "range": "± 49",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/1024",
+            "value": 2015,
+            "range": "± 30",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/2048",
+            "value": 3602,
+            "range": "± 78",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/mostly_ascii/4096",
+            "value": 8471,
+            "range": "± 428",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/8",
+            "value": 8,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/64",
+            "value": 8,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/256",
+            "value": 11,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/512",
+            "value": 14,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/1024",
+            "value": 24,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/2048",
+            "value": 49,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/ascii/4096",
+            "value": 89,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/8",
+            "value": 52,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/64",
+            "value": 202,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/256",
+            "value": 707,
+            "range": "± 121",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/512",
+            "value": 1378,
+            "range": "± 12",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/1024",
+            "value": 2739,
+            "range": "± 14",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/2048",
+            "value": 5420,
+            "range": "± 113",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_checked/extended/4096",
+            "value": 10795,
+            "range": "± 122",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/8",
+            "value": 52,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/64",
+            "value": 227,
+            "range": "± 7",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/256",
+            "value": 799,
+            "range": "± 6",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/512",
+            "value": 1562,
+            "range": "± 16",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/1024",
+            "value": 3103,
+            "range": "± 28",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/2048",
+            "value": 6151,
+            "range": "± 219",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "encode_lossy/all_bad/4096",
+            "value": 12260,
+            "range": "± 75",
             "unit": "ns/iter"
           }
         ]
