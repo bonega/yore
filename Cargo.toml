@@ -1,6 +1,6 @@
 [package]
 name = "yore"
-version = "1.3.1"
+version = "1.4.0"
 authors = ["Andreas Liljeqvist <bonega@gmail.com>"]
 edition = "2021"
 categories = ["encoding"]
@@ -10,6 +10,13 @@ description = "Rust library for decoding/encoding character sets according to OE
 repository = "https://github.com/bonega/yore/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["std"]
+# Enables `std::error::Error` impls for the error types.
+# Disable (`--no-default-features`) to build as `no_std`; the crate still
+# requires an allocator (it uses the `alloc` crate).
+std = []
 
 [dependencies]
 

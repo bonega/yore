@@ -2,7 +2,7 @@
 
 A Rust library for decoding and encoding character sets based on OEM code pages.
 
-[![yore at crates.io](https://img.shields.io/badge/crates.io-1.3.1-blue)](https://crates.io/crates/yore)
+[![yore at crates.io](https://img.shields.io/badge/crates.io-1.4.0-blue)](https://crates.io/crates/yore)
 [![yore at docs.rs](https://docs.rs/yore/badge.svg)](https://docs.rs/yore)
 
 # Features
@@ -11,6 +11,7 @@ A Rust library for decoding and encoding character sets based on OEM code pages.
 * Easy-to-use API
 * Broad range of [supported code pages](#supported-code-pages)
 * Handles code pages with redefined ASCII characters (<0x80), such as '٪' in CP864
+* `no_std` support (requires an allocator) by disabling default features
 
 # Usage
 
@@ -18,8 +19,22 @@ Add `yore` to your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-yore = "1.3.1"
+yore = "1.4.0"
 ```
+
+## `no_std`
+
+`yore` builds without the standard library when the default `std` feature is
+disabled. It still requires an allocator, since the API returns owned `Cow`
+buffers.
+
+```toml
+[dependencies]
+yore = { version = "1.4.0", default-features = false }
+```
+
+The only difference from the default build is that the `std::error::Error` impls
+for `EncodeError`/`DecodeError` are omitted (`Display` is always available).
 
 # Examples
 

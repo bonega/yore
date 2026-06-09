@@ -1,5 +1,9 @@
-use std::borrow::Cow;
-use std::fmt;
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
+use alloc::borrow::Cow;
+use core::fmt;
 
 pub mod code_pages;
 pub(crate) mod decoder;
@@ -15,6 +19,7 @@ impl fmt::Display for EncodeError {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for EncodeError {}
 
 pub trait CodePage: Encoder {
@@ -129,6 +134,7 @@ impl fmt::Display for DecodeError {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for DecodeError {}
 
 #[cfg(test)]
@@ -162,7 +168,7 @@ mod tests {
         for cp in codepages {
             for b in 0u8..128 {
                 let bytes = [b];
-                let expected = std::str::from_utf8(&bytes).unwrap();
+                let expected = core::str::from_utf8(&bytes).unwrap();
                 // undefined byte mappings are fine; only check the ones that decode
                 if let Ok(decoded) = cp.decode(&bytes) {
                     assert_eq!(

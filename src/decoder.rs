@@ -1,7 +1,9 @@
 pub(crate) mod complete;
 pub(crate) mod incomplete;
 
-use std::mem;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::mem;
 
 pub(crate) use complete::Entry as CompleteEntry;
 pub(crate) use incomplete::{Entry as IncompleteEntry, Len as IncompleteLen};

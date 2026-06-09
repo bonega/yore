@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use alloc::borrow::Cow;
 
 use crate::{
     decoder::{self, complete::decode_helper, CompleteEntry},
