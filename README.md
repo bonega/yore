@@ -55,6 +55,29 @@ assert_eq!(CP850.encode_char('A'), Some(b'A'));
 assert_eq!(CP850.decode_byte(b'A'), 'A');
 ```
 
+## CP437G (VGA text-mode glyphs)
+
+The optional `cp437g` feature adds the `CP437G` code page: CP437 overlaid with
+the IBM-Graphics glyphs (☺ ♥ ♪ → ⌂ ...) at the C0 control byte range, as the VGA
+BIOS glyph ROM renders them. It pairs well with `encode_char` for driving a text
+buffer from a `no_std` kernel.
+
+```toml
+[dependencies]
+yore = { version = "2.0.0", features = ["cp437g"] }
+```
+
+```rust
+use yore::code_pages::CP437G;
+
+assert_eq!(CP437G.encode_char('☺'), Some(0x01));
+assert_eq!(CP437G.decode_byte(0x01), '☺');
+```
+
+Some glyphs share a byte with an ASCII control character (`0x09` ○, `0x0A` ◙,
+`0x0D` ♪). The ASCII fast-path still encodes `'\t'`/`'\n'`/`'\r'` to those
+bytes, so intercept the source `char` first if you need newline semantics.
+
 # Examples
 
 ## Using a specific code page

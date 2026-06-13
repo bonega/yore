@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add allocation-free `encode_char` / `decode_byte` primitives, available without an allocator (e.g. for `no_std` embedded targets).
 - Add an `alloc` feature gating the `Cow`-returning `encode`/`decode` API. `std` now implies `alloc`, so the default build is unchanged.
 - **Breaking change** (only for the `default-features = false` case): `default-features = false` previously implied an allocator and kept the full API. It now selects the no-allocator tier; add `features = ["alloc"]` to restore the `no_std` + allocator behavior introduced in 1.4.0. The default build is unaffected.
+- Add an optional `cp437g` feature: the `CP437G` code page (CP437 overlaid with the IBM-Graphics glyphs at the C0 control byte range) for VGA text-mode rendering. Off by default.
 
 ## [1.4.0] - 2026-06-09
 - Add `no_std` support. Disable the default `std` feature (`default-features = false`) to build without the standard library; the crate still requires an allocator. The only difference is that the `std::error::Error` impls for `EncodeError`/`DecodeError` are omitted. No changes for existing users.
