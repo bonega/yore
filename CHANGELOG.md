@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-06-13
+- Add allocation-free `encode_char` / `decode_byte` primitives, available without an allocator (e.g. for `no_std` embedded targets).
+- Add an `alloc` feature gating the `Cow`-returning `encode`/`decode` API. `std` now implies `alloc`, so the default build is unchanged.
+- **Behavior change:** `default-features = false` previously implied an allocator and kept the full API. It now selects the no-allocator tier; add `features = ["alloc"]` to restore the `no_std` + allocator behavior introduced in 1.4.0.
+
 ## [1.4.0] - 2026-06-09
 - Add `no_std` support. Disable the default `std` feature (`default-features = false`) to build without the standard library; the crate still requires an allocator. The only difference is that the `std::error::Error` impls for `EncodeError`/`DecodeError` are omitted. No changes for existing users.
 

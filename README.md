@@ -2,7 +2,7 @@
 
 A Rust library for decoding and encoding character sets based on OEM code pages.
 
-[![yore at crates.io](https://img.shields.io/badge/crates.io-1.4.0-blue)](https://crates.io/crates/yore)
+[![yore at crates.io](https://img.shields.io/badge/crates.io-1.5.0-blue)](https://crates.io/crates/yore)
 [![yore at docs.rs](https://docs.rs/yore/badge.svg)](https://docs.rs/yore)
 
 # Features
@@ -11,7 +11,8 @@ A Rust library for decoding and encoding character sets based on OEM code pages.
 * Easy-to-use API
 * Broad range of [supported code pages](#supported-code-pages)
 * Handles code pages with redefined ASCII characters (<0x80), such as '٪' in CP864
-* `no_std` support (requires an allocator) by disabling default features
+* `no_std` support, with or without an allocator, via cargo features
+* Allocation-free `encode_char` / `decode_byte` primitives for embedded use
 
 # Usage
 
@@ -19,22 +20,40 @@ Add `yore` to your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-yore = "1.4.0"
+yore = "1.5.0"
 ```
 
 ## `no_std`
 
-`yore` builds without the standard library when the default `std` feature is
-disabled. It still requires an allocator, since the API returns owned `Cow`
-buffers.
+`yore` has three feature tiers, so it scales from std down to bare-metal targets
+with no allocator:
+
+| Cargo features | Environment | API |
+| --- | --- | --- |
+| `std` (default) | `std` | Full API + `std::error::Error` impls |
+| `alloc` | `no_std` + allocator | Full API; `Error` impls omitted (`Display` stays) |
+| *(none)* | `no_std`, no allocator | Allocation-free char primitives only |
+
+The allocating `encode`/`decode` family returns owned `Cow` buffers and so
+requires the `alloc` feature. Without it, only the allocation-free
+`encode_char` / `decode_byte` primitives are available:
 
 ```toml
 [dependencies]
-yore = { version = "1.4.0", default-features = false }
+# no_std with an allocator: keep the full Cow-returning API
+yore = { version = "1.5.0", default-features = false, features = ["alloc"] }
+
+# no_std without an allocator: char primitives only
+yore = { version = "1.5.0", default-features = false }
 ```
 
-The only difference from the default build is that the `std::error::Error` impls
-for `EncodeError`/`DecodeError` are omitted (`Display` is always available).
+```rust
+use yore::code_pages::CP850;
+
+// Encode/decode one character at a time, no allocation required.
+assert_eq!(CP850.encode_char('A'), Some(b'A'));
+assert_eq!(CP850.decode_byte(b'A'), 'A');
+```
 
 # Examples
 
