@@ -8,6 +8,8 @@ mod cp1256;
 mod cp1257;
 mod cp1258;
 mod cp437;
+#[cfg(feature = "cp437g")]
+mod cp437g;
 mod cp737;
 mod cp850;
 mod cp852;
@@ -34,6 +36,8 @@ pub use cp1256::*;
 pub use cp1257::*;
 pub use cp1258::*;
 pub use cp437::*;
+#[cfg(feature = "cp437g")]
+pub use cp437g::*;
 pub use cp737::*;
 pub use cp850::*;
 pub use cp852::*;

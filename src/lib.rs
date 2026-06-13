@@ -144,6 +144,51 @@ impl fmt::Display for DecodeError {
 #[cfg(feature = "std")]
 impl std::error::Error for DecodeError {}
 
+#[cfg(all(test, feature = "cp437g"))]
+mod cp437g_tests {
+    use crate::code_pages::{CP437, CP437G};
+
+    #[test]
+    fn ibm_graphics_glyphs_encode_to_low_bytes() {
+        assert_eq!(CP437G.encode_char('☺'), Some(0x01));
+        assert_eq!(CP437G.encode_char('♥'), Some(0x03));
+        assert_eq!(CP437G.encode_char('☼'), Some(0x0F));
+        assert_eq!(CP437G.encode_char('⌂'), Some(0x7F));
+    }
+
+    #[test]
+    fn glyphs_sharing_a_byte_with_ascii_controls_are_representable() {
+        assert_eq!(CP437G.encode_char('○'), Some(0x09));
+        assert_eq!(CP437G.encode_char('◙'), Some(0x0A));
+        assert_eq!(CP437G.encode_char('♪'), Some(0x0D));
+    }
+
+    #[test]
+    fn decode_maps_low_bytes_to_glyphs() {
+        assert_eq!(CP437G.decode_byte(0x01), '☺');
+        assert_eq!(CP437G.decode_byte(0x09), '○');
+        assert_eq!(CP437G.decode_byte(0x0A), '◙');
+        assert_eq!(CP437G.decode_byte(0x0D), '♪');
+        assert_eq!(CP437G.decode_byte(0x7F), '⌂');
+    }
+
+    #[test]
+    fn ascii_control_chars_still_encode_to_their_bytes() {
+        // yore's ASCII fast-path; callers intercept the source char if they
+        // need newline semantics.
+        assert_eq!(CP437G.encode_char('\t'), Some(0x09));
+        assert_eq!(CP437G.encode_char('\n'), Some(0x0A));
+        assert_eq!(CP437G.encode_char('\r'), Some(0x0D));
+    }
+
+    #[test]
+    fn strict_cp437_differs_from_cp437g() {
+        // Strict CP437 has no smiley and keeps the C0 control mapping.
+        assert_eq!(CP437.encode_char('☺'), None);
+        assert_eq!(CP437.decode_byte(0x01), '\u{0001}');
+    }
+}
+
 #[cfg(test)]
 mod no_alloc_tests {
     use crate::code_pages::{CP437, CP864};

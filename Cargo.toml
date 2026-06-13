@@ -20,6 +20,9 @@ std = ["alloc"]
 # `no_std` targets without an allocator; only the allocation-free char
 # primitives (`encode_char`, `decode_byte`) remain available.
 alloc = []
+# Adds the CP437G code page: CP437 overlaid with the IBM-Graphics glyphs at the
+# C0 control byte range, for VGA text-mode rendering. Off by default.
+cp437g = []
 
 [dependencies]
 
