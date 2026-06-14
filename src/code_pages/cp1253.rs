@@ -84,11 +84,12 @@ impl CP1253 {
     ///
     /// assert_eq!(CP1253.decode_byte(b't'), Some('t'));
     /// ```
+    #[cfg(feature = "alloc")]
     #[inline(always)]
     pub fn decode_byte(self, b: u8) -> Option<char> {
-        // Decode the entry's stored UTF-8 bytes back into their scalar value,
-        // using the length we already have. Reading the fields directly (rather
-        // than passing `buf` to a helper) lets the entry load as a single word.
+        // The UTF-8 decode table is already in memory for the bulk `decode`
+        // path, so decode the entry's stored bytes from the length we have
+        // rather than carrying a second (codepoint) table.
         let e = DECODE_TABLE[b as usize]?;
         let cp = match e.len as u32 {
             1 => e.buf[0] as u32,
@@ -101,6 +102,16 @@ impl CP1253 {
         };
         // SAFETY: table contents are valid UTF-8 for exactly one scalar value.
         Some(unsafe { char::from_u32_unchecked(cp) })
+    }
+
+    /// Decode a single CP1253 byte into its character.
+    #[cfg(not(feature = "alloc"))]
+    #[inline(always)]
+    pub fn decode_byte(self, b: u8) -> Option<char> {
+        // No bulk decoder in this build, so the table stores codepoints
+        // directly (`Option<char>` niche-packs to the same 4 bytes/entry) and
+        // this is a load.
+        DECODE_TABLE_CHAR[b as usize]
     }
 
     /// Encode UTF-8 string into CP1253 byte-encoding
@@ -2231,6 +2242,24 @@ const DECODE_TABLE_LOSSY: decoder::complete::Table = [
         len: 3,
     },
 ];
+
+// In the no-alloc build there is no bulk decoder, so `DECODE_TABLE` is consumed
+// only by this const-eval and is never emitted; `DECODE_TABLE_CHAR` (same size,
+// `Option<char>` niche-packs to 4 bytes/entry) takes its place in rodata and
+// makes `decode_byte` a single load.
+#[cfg(not(feature = "alloc"))]
+const DECODE_TABLE_CHAR: [Option<char>; 256] = {
+    let mut t = [None; 256];
+    let mut i = 0;
+    while i < 256 {
+        t[i] = match DECODE_TABLE[i] {
+            Some(e) => Some(decoder::entry_to_char(e.buf, e.len as u32)),
+            None => None,
+        };
+        i += 1;
+    }
+    t
+};
 
 impl Encoder for CP1253 {
     #[doc(hidden)]
