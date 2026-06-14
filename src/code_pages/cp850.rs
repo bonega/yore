@@ -49,12 +49,21 @@ impl CP850 {
     /// ```
     #[inline(always)]
     pub fn decode_byte(self, b: u8) -> char {
-        let entry = DECODE_TABLE[b as usize];
-        // SAFETY: table contents are valid UTF-8 by construction.
-        unsafe { core::str::from_utf8_unchecked(&entry.buf[..entry.len as usize]) }
-            .chars()
-            .next()
-            .unwrap()
+        // Decode the entry's stored UTF-8 bytes back into their scalar value,
+        // using the length we already have. Reading the fields directly (rather
+        // than passing `buf` to a helper) lets the entry load as a single word.
+        let e = DECODE_TABLE[b as usize];
+        let cp = match e.len {
+            1 => e.buf[0] as u32,
+            2 => ((e.buf[0] as u32 & 0x1F) << 6) | (e.buf[1] as u32 & 0x3F),
+            _ => {
+                ((e.buf[0] as u32 & 0x0F) << 12)
+                    | ((e.buf[1] as u32 & 0x3F) << 6)
+                    | (e.buf[2] as u32 & 0x3F)
+            }
+        };
+        // SAFETY: table contents are valid UTF-8 for exactly one scalar value.
+        unsafe { char::from_u32_unchecked(cp) }
     }
 
     /// Encode UTF-8 string into CP850 byte-encoding

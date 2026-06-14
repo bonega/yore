@@ -31,3 +31,8 @@ name = "invariant"
 path = "fuzz_targets/invariant.rs"
 test = false
 doc = false
+[[bin]]
+name = "decode_byte"
+path = "fuzz_targets/decode_byte.rs"
+test = false
+doc = false

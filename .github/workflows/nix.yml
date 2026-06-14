@@ -71,6 +71,11 @@ jobs:
           cd fuzz
           nix develop --command cargo fuzz run invariant -- -max_total_time=60
 
+      - name: Fuzz decode_byte target
+        run: |
+          cd fuzz
+          nix develop --command cargo fuzz run decode_byte -- -max_total_time=60
+
   format:
     runs-on: ubuntu-latest
     steps:
