@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-06-14
+- Speed up the allocation-free `decode_byte` primitive (~2-4x) in `no_std`/no-allocator builds: the decode table now stores codepoints directly, so `decode_byte` lowers to a single indexed load. No API changes.
+
 ## [2.0.0] - 2026-06-13
 - Add allocation-free `encode_char` / `decode_byte` primitives, available without an allocator (e.g. for `no_std` embedded targets).
 - Add an `alloc` feature gating the `Cow`-returning `encode`/`decode` API. `std` now implies `alloc`, so the default build is unchanged.
