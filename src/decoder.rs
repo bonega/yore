@@ -11,6 +11,23 @@ use core::mem;
 pub(crate) use complete::Entry as CompleteEntry;
 pub(crate) use incomplete::{Entry as IncompleteEntry, Len as IncompleteLen};
 
+/// Decode a table entry's stored UTF-8 (1–3 bytes, known `len`) into its `char`.
+///
+/// Used only at const-eval time to build the no-alloc codepoint tables, so the
+/// per-byte cost is paid by the compiler, not at runtime.
+#[cfg(not(feature = "alloc"))]
+pub(crate) const fn entry_to_char(buf: [u8; 3], len: u32) -> char {
+    let cp = match len {
+        1 => buf[0] as u32,
+        2 => ((buf[0] as u32 & 0x1F) << 6) | (buf[1] as u32 & 0x3F),
+        _ => {
+            ((buf[0] as u32 & 0x0F) << 12) | ((buf[1] as u32 & 0x3F) << 6) | (buf[2] as u32 & 0x3F)
+        }
+    };
+    // SAFETY: table contents are valid UTF-8 for exactly one scalar value.
+    unsafe { char::from_u32_unchecked(cp) }
+}
+
 #[cfg(feature = "alloc")]
 const USIZE_SIZE: usize = mem::size_of::<usize>();
 
