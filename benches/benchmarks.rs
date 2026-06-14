@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use criterion::{
-    criterion_group, criterion_main, measurement::WallTime, BenchmarkGroup, BenchmarkId, Criterion,
-    Throughput,
+    black_box, criterion_group, criterion_main, measurement::WallTime, BenchmarkGroup, BenchmarkId,
+    Criterion, Throughput,
 };
 use rand::distributions::uniform::SampleRange;
 use rand::distributions::{Distribution, WeightedIndex};
@@ -10,7 +10,7 @@ use rand::distributions::{Distribution, WeightedIndex};
 use rand::{RngCore, SeedableRng};
 use rand_pcg::{Lcg128Xsl64, Pcg64};
 
-use yore::code_pages::CP874;
+use yore::code_pages::{CP437, CP874};
 
 /// Configure benchmark timing based on input size.
 /// Smaller inputs need less time since they run many more iterations.
@@ -105,6 +105,50 @@ fn decode_lossy(
     group.finish();
 }
 
+/// Per-byte allocation-free decoding. CP437 is a complete codepage
+/// (`decode_byte -> char`); CP874 is incomplete (`-> Option<char>`).
+/// Inputs span the full 0..=255 range to exercise 1/2/3-byte mappings.
+fn decode_byte(c: &mut Criterion) {
+    let mut rng_yore = Pcg64::seed_from_u64(42);
+    let mut group = c.benchmark_group("decode_byte");
+    for size in [256usize, 4096] {
+        configure_for_size(&mut group, size);
+        let input: Vec<u8> = (0..size).map(|_| rng_yore.next_u32() as u8).collect();
+        group.throughput(Throughput::Bytes(size as u64));
+
+        group.bench_with_input(
+            BenchmarkId::new("complete_cp437", size),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    let mut acc = 0u32;
+                    for &byte in input {
+                        acc = acc.wrapping_add(CP437.decode_byte(black_box(byte)) as u32);
+                    }
+                    acc
+                })
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("incomplete_cp874", size),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    let mut acc = 0u32;
+                    for &byte in input {
+                        if let Some(ch) = CP874.decode_byte(black_box(byte)) {
+                            acc = acc.wrapping_add(ch as u32);
+                        }
+                    }
+                    acc
+                })
+            },
+        );
+    }
+    group.finish();
+}
+
 fn sample_mostly_ascii_bytes(rng: &mut impl RngCore, n: usize) -> Vec<u8> {
     let choices = [65, 161];
     let weights = [9, 1];
@@ -150,6 +194,7 @@ fn all_bad_strings(_rng: &mut impl RngCore, n: usize) -> String {
 fn bench(c: &mut Criterion) {
     const KB: usize = 1024;
     let sizes = &[8, 64, 256, 512, KB, 2 * KB, 4 * KB];
+    decode_byte(c);
     decode_checked(
         c,
         "decode_checked/mostly_ascii",
