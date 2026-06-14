@@ -1,9 +1,14 @@
+#[cfg(feature = "alloc")]
 use alloc::borrow::Cow;
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
+#[cfg(feature = "alloc")]
 use core::mem;
 
+#[cfg(feature = "alloc")]
 use crate::DecodeError;
 
+#[cfg(feature = "alloc")]
 use super::{contains_nonascii, finalize_string, USIZE_SIZE};
 
 /// UTF8 length enum for incomplete tables (enables niche optimization with Option)
@@ -23,6 +28,7 @@ pub struct Entry {
 }
 
 impl Entry {
+    #[cfg(feature = "alloc")]
     pub fn from_char(c: char) -> Self {
         let c_len = c.len_utf8();
         assert!(c_len < 4);
@@ -43,6 +49,7 @@ impl Entry {
     ///
     /// dst must have at least three bytes of space remaining.
     /// After execution dst will be advanced by the number of bytes written.
+    #[cfg(feature = "alloc")]
     #[inline]
     pub unsafe fn write(self, dst: &mut *mut u8) {
         // Always copy 3 bytes (branchless), then advance by actual length
@@ -54,6 +61,7 @@ impl Entry {
 /// Table for incomplete codepages using Option for niche optimization
 pub(crate) type Table = [Option<Entry>; 256];
 
+#[cfg(feature = "alloc")]
 #[inline(always)]
 pub(crate) fn decode_helper<'a>(
     table: &Table,
@@ -110,6 +118,7 @@ pub(crate) fn decode_helper<'a>(
 
 /// Same as `decode_helper`, but have no optimizations for ascii.
 /// Needed by CP864 and EBCDIC codepages.
+#[cfg(feature = "alloc")]
 #[inline(always)]
 pub(crate) fn decode_helper_non_ascii<'a>(
     table: &Table,
@@ -126,6 +135,7 @@ pub(crate) fn decode_helper_non_ascii<'a>(
 /// Decode bytes using table lookup. ASCII_OPT enables fast path for ASCII bytes.
 /// # Safety
 /// `dst` must point to a buffer with at least `src.len() * 3` bytes of writable space remaining.
+#[cfg(feature = "alloc")]
 #[inline]
 unsafe fn decode_slice_inner<const ASCII_OPT: bool>(
     table: &Table,
@@ -151,6 +161,7 @@ unsafe fn decode_slice_inner<const ASCII_OPT: bool>(
     Ok(())
 }
 
+#[cfg(feature = "alloc")]
 #[inline]
 unsafe fn decode_slice(
     table: &Table,

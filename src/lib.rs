@@ -1,7 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
+#[cfg(feature = "alloc")]
 use alloc::borrow::Cow;
 use core::fmt;
 
@@ -37,6 +39,7 @@ pub trait CodePage: Encoder {
     /// assert_eq!(cp850.encode("text").unwrap(), vec![116, 101, 120, 116]);
     /// assert!(matches!(cp850.encode("text 🦀"), EncodeError));
     /// ```
+    #[cfg(feature = "alloc")]
     #[inline]
     fn encode<'a>(&self, s: &'a str) -> Result<Cow<'a, [u8]>, EncodeError> {
         self.encode_helper(s, None)
@@ -55,6 +58,7 @@ pub trait CodePage: Encoder {
     /// let cp850: &dyn CodePage = &yore::code_pages::CP850;
     /// assert_eq!(cp850.encode_lossy("text 🦀", 168), vec![116, 101, 120, 116, 32, 168])
     /// ```
+    #[cfg(feature = "alloc")]
     #[inline]
     fn encode_lossy<'a>(&self, s: &'a str, fallback: u8) -> Cow<'a, [u8]> {
         self.encode_helper(s, Some(fallback)).unwrap()
@@ -77,6 +81,7 @@ pub trait CodePage: Encoder {
     /// //codepoint 231 is undefined
     /// assert!(matches!(cp857.decode(&[116, 101, 120, 116, 231]), Err(DecodeError{position: 4, value: 231})));
     /// ```
+    #[cfg(feature = "alloc")]
     fn decode<'a>(&self, bytes: &'a [u8]) -> Result<Cow<'a, str>, DecodeError>;
 
     /// Decode single-byte encoding into UTF-8 string
@@ -93,6 +98,7 @@ pub trait CodePage: Encoder {
     /// //codepoint 231 is undefined
     /// assert_eq!(cp857.decode_lossy(&[116, 101, 120, 116, 32, 231]), "text �");
     /// ```
+    #[cfg(feature = "alloc")]
     #[inline(always)]
     fn decode_lossy<'a>(&self, bytes: &'a [u8]) -> Cow<'a, str> {
         self.decode(bytes).unwrap()
@@ -112,6 +118,7 @@ pub trait CodePage: Encoder {
     /// //codepoint 231 is undefined
     /// assert_eq!(cp857.decode_lossy_fallback(&[116, 101, 120, 116, 32, 231], '�'), "text �");
     /// ```
+    #[cfg(feature = "alloc")]
     #[inline(always)]
     fn decode_lossy_fallback<'a>(&self, bytes: &'a [u8], _fallback: char) -> Cow<'a, str> {
         self.decode(bytes).unwrap()
@@ -138,6 +145,44 @@ impl fmt::Display for DecodeError {
 impl std::error::Error for DecodeError {}
 
 #[cfg(test)]
+mod no_alloc_tests {
+    use crate::code_pages::{CP437, CP864};
+
+    #[test]
+    fn encode_char_ascii() {
+        assert_eq!(CP437.encode_char('t'), Some(b't'));
+        assert_eq!(CP437.encode_char('\n'), Some(b'\n'));
+    }
+
+    #[test]
+    fn encode_char_high_glyph() {
+        assert_eq!(CP437.encode_char('█'), Some(0xDB));
+        assert_eq!(CP437.encode_char('╔'), Some(0xC9));
+    }
+
+    #[test]
+    fn encode_char_unmapped() {
+        assert_eq!(CP437.encode_char('🦀'), None);
+    }
+
+    #[test]
+    fn decode_byte_complete() {
+        // CP437 is a complete codepage: decode_byte returns `char`.
+        assert_eq!(CP437.decode_byte(b't'), 't');
+        assert_eq!(CP437.decode_byte(0xDB), '█');
+        assert_eq!(CP437.decode_byte(0xC9), '╔');
+    }
+
+    #[test]
+    fn decode_byte_incomplete() {
+        // CP864 is an incomplete codepage: decode_byte returns `Option<char>`,
+        // and has a nonstandard ASCII mapping at 0x25 -> '٪'.
+        assert_eq!(CP864.decode_byte(0x25), Some('٪'));
+        assert_eq!(CP864.decode_byte(b't'), Some('t'));
+    }
+}
+
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use crate::code_pages::{CP1253, CP1255, CP1257, CP857, CP864, CP869, CP874};
     use crate::CodePage;

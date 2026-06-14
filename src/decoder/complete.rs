@@ -1,7 +1,11 @@
+#[cfg(feature = "alloc")]
 use alloc::borrow::Cow;
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
+#[cfg(feature = "alloc")]
 use core::mem;
 
+#[cfg(feature = "alloc")]
 use super::{contains_nonascii, finalize_string, USIZE_SIZE};
 
 /// Entry for complete/lossy tables - optimized for branchless 4-byte writes
@@ -20,6 +24,7 @@ impl Entry {
     ///
     /// dst must have at least four bytes of space remaining.
     /// After execution dst will be advanced by the number of bytes written.
+    #[cfg(feature = "alloc")]
     #[inline]
     pub unsafe fn write(self, dst: &mut *mut u8) {
         let word: u32 = mem::transmute(self);
@@ -30,6 +35,7 @@ impl Entry {
 
 pub(crate) type Table = [Entry; 256];
 
+#[cfg(feature = "alloc")]
 #[inline(always)]
 pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
     if src.is_ascii() {
@@ -39,7 +45,7 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 
     // +1 for branchless 4-byte write which may overshoot by 1 byte
     let mut buffer: Vec<u8> = Vec::with_capacity(src.len() * 3 + 1);
-    // Safety: decode_slice expects buffer.len() >= src.len() * 3
+    // SAFETY: decode_slice expects buffer.len() >= src.len() * 3
     let mut dst = buffer.as_mut_ptr();
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
@@ -75,11 +81,12 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 
 /// Same as `decode_helper`, but have no optimizations for ascii.
 /// Needed by CP864 and EBCDIC codepages.
+#[cfg(feature = "alloc")]
 #[inline(always)]
 pub(crate) fn decode_helper_non_ascii<'a>(table: &Table, bytes: &'a [u8]) -> Cow<'a, str> {
     // +1 for branchless 4-byte write which may overshoot by 1 byte
     let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
-    // Safety: decode_slice expects buffer.len() >= src.len() * 3
+    // SAFETY: decode_slice expects buffer.len() >= src.len() * 3
     let mut dst = buffer.as_mut_ptr();
     unsafe { decode_slice(table, bytes, &mut dst) };
     unsafe { finalize_string(buffer, dst) }.into()
@@ -89,6 +96,7 @@ pub(crate) fn decode_helper_non_ascii<'a>(table: &Table, bytes: &'a [u8]) -> Cow
 /// # Safety
 ///
 /// This function is unsafe because it assumes that the buffer pointed to by [`dst`] has a length >= src.len() * 3
+#[cfg(feature = "alloc")]
 #[inline]
 unsafe fn decode_slice(table: &Table, src: &[u8], dst: &mut *mut u8) {
     for b in src {

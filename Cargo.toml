@@ -1,6 +1,6 @@
 [package]
 name = "yore"
-version = "1.4.0"
+version = "2.0.0"
 authors = ["Andreas Liljeqvist <bonega@gmail.com>"]
 edition = "2021"
 categories = ["encoding"]
@@ -13,10 +13,13 @@ repository = "https://github.com/bonega/yore/"
 
 [features]
 default = ["std"]
-# Enables `std::error::Error` impls for the error types.
-# Disable (`--no-default-features`) to build as `no_std`; the crate still
-# requires an allocator (it uses the `alloc` crate).
-std = []
+# Enables `std::error::Error` impls for the error types. Implies `alloc`.
+std = ["alloc"]
+# Enables the allocating API (the `Cow`-returning `encode`/`decode` family),
+# pulling in the `alloc` crate. Disable (`--no-default-features`) to build for
+# `no_std` targets without an allocator; only the allocation-free char
+# primitives (`encode_char`, `decode_byte`) remain available.
+alloc = []
 
 [dependencies]
 
