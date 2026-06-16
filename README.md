@@ -2,7 +2,7 @@
 
 A Rust library for decoding and encoding character sets based on OEM code pages.
 
-[![yore at crates.io](https://img.shields.io/badge/crates.io-2.0.1-blue)](https://crates.io/crates/yore)
+[![yore at crates.io](https://img.shields.io/badge/crates.io-2.1.0-blue)](https://crates.io/crates/yore)
 [![yore at docs.rs](https://docs.rs/yore/badge.svg)](https://docs.rs/yore)
 
 # Features
@@ -11,8 +11,7 @@ A Rust library for decoding and encoding character sets based on OEM code pages.
 * Easy-to-use API
 * Broad range of [supported code pages](#supported-code-pages)
 * Handles code pages with redefined ASCII characters (<0x80), such as '٪' in CP864
-* `no_std` support, with or without an allocator, via cargo features
-* Allocation-free `encode_char` / `decode_byte` primitives for embedded use
+* [`no_std` support](#no_std), with or without an allocator — down to allocation-free `encode_char` / `decode_byte` primitives for embedded use
 
 # Usage
 
@@ -20,40 +19,31 @@ Add `yore` to your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-yore = "2.0.1"
+yore = "2.1.0"
 ```
 
-## `no_std`
+## CP437G (VGA text-mode glyphs)
 
-`yore` has three feature tiers, so it scales from std down to bare-metal targets
-with no allocator:
-
-| Cargo features | Environment | API |
-| --- | --- | --- |
-| `std` (default) | `std` | Full API + `std::error::Error` impls |
-| `alloc` | `no_std` + allocator | Full API; `Error` impls omitted (`Display` stays) |
-| *(none)* | `no_std`, no allocator | Allocation-free char primitives only |
-
-The allocating `encode`/`decode` family returns owned `Cow` buffers and so
-requires the `alloc` feature. Without it, only the allocation-free
-`encode_char` / `decode_byte` primitives are available:
+The optional `cp437g` feature adds the `CP437G` code page: CP437 overlaid with
+the IBM-Graphics glyphs (☺ ♥ ♪ → ⌂ ...) at the C0 control byte range, as the VGA
+BIOS glyph ROM renders them. It pairs well with `encode_char` for driving a text
+buffer from a `no_std` kernel.
 
 ```toml
 [dependencies]
-# no_std with an allocator: keep the full Cow-returning API
-yore = { version = "2.0.1", default-features = false, features = ["alloc"] }
-
-# no_std without an allocator: char primitives only
-yore = { version = "2.0.1", default-features = false }
+yore = { version = "2.1.0", features = ["cp437g"] }
 ```
 
 ```rust
-use yore::code_pages::CP850;
+use yore::code_pages::CP437G;
 
-// Encode/decode one character at a time, no allocation required.
-assert_eq!(CP850.encode_char('A'), Some(b'A'));
-assert_eq!(CP850.decode_byte(b'A'), 'A');
+assert_eq!(CP437G.encode_char('☺'), Some(0x01));
+assert_eq!(CP437G.decode_byte(0x01), '☺');
 ```
+
+Some glyphs share a byte with an ASCII control character (`0x09` ○, `0x0A` ◙,
+`0x0D` ♪). The ASCII fast-path still encodes `'\t'`/`'\n'`/`'\r'` to those
+bytes, so intercept the source `char` first if you need newline semantics.
 
 # Examples
 
@@ -128,6 +118,38 @@ fn do_something(code_page: &dyn CodePage, bytes: &[u8]) {
 `encoding_rs` supports only a few of the encodings that `oem_cp` and `yore` support. Additionally, `encoding_rs` focuses on streaming use cases.
 
 Refer to the [bench crate](https://github.com/bonega/yore/blob/28198ff8d4e487a8f7e6a477fe7cbc19313618c0/benchmark/README.md) for more details.
+
+# `no_std`
+
+`yore` has three feature tiers, so it scales from std down to bare-metal targets
+with no allocator:
+
+| Cargo features | Environment | API |
+| --- | --- | --- |
+| `std` (default) | `std` | Full API + `std::error::Error` impls |
+| `alloc` | `no_std` + allocator | Full API; `Error` impls omitted (`Display` stays) |
+| *(none)* | `no_std`, no allocator | Allocation-free char primitives only |
+
+The allocating `encode`/`decode` family returns owned `Cow` buffers and so
+requires the `alloc` feature. Without it, only the allocation-free
+`encode_char` / `decode_byte` primitives are available:
+
+```toml
+[dependencies]
+# no_std with an allocator: keep the full Cow-returning API
+yore = { version = "2.1.0", default-features = false, features = ["alloc"] }
+
+# no_std without an allocator: char primitives only
+yore = { version = "2.1.0", default-features = false }
+```
+
+```rust
+use yore::code_pages::CP850;
+
+// Encode/decode one character at a time, no allocation required.
+assert_eq!(CP850.encode_char('A'), Some(b'A'));
+assert_eq!(CP850.decode_byte(b'A'), 'A');
+```
 
 # Contributing
 

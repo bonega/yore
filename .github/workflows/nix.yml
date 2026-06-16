@@ -26,6 +26,9 @@ jobs:
       - name: Run tests
         run: nix develop --command cargo test --verbose
 
+      - name: Run tests (all features)
+        run: nix develop --command cargo test --all-features --verbose
+
   no-std:
     runs-on: ubuntu-latest
     steps:
@@ -47,6 +50,9 @@ jobs:
 
       - name: Build no_std + alloc (bare-metal target)
         run: nix develop --command cargo build --no-default-features --features alloc --lib --target thumbv7em-none-eabi --verbose
+
+      - name: Build no_std + no_alloc + cp437g (bare-metal target)
+        run: nix develop --command cargo build --no-default-features --features cp437g --lib --target thumbv7em-none-eabi --verbose
 
   fuzz:
     runs-on: ubuntu-latest
@@ -108,14 +114,20 @@ jobs:
       - name: Run clippy
         run: nix develop --command cargo clippy --all-targets -- -D warnings
 
-      # The `#[cfg(feature = "alloc")]` gating means an unused import in a
-      # reduced feature set can only be caught by linting that set. Benches and
+      # The `#[cfg(feature = ...)]` gating means an unused import in a reduced
+      # feature set can only be caught by linting that set. Benches and
       # integration targets are not feature-gated, so these are lib-scoped.
       - name: Run clippy (no_std, no allocator)
         run: nix develop --command cargo clippy --no-default-features --lib -- -D warnings
 
       - name: Run clippy (no_std, alloc)
         run: nix develop --command cargo clippy --no-default-features --features alloc --lib -- -D warnings
+
+      - name: Run clippy (no_std, cp437g)
+        run: nix develop --command cargo clippy --no-default-features --features cp437g --lib -- -D warnings
+
+      - name: Run clippy (all features)
+        run: nix develop --command cargo clippy --all-targets --all-features -- -D warnings
 
   codegen:
     runs-on: ubuntu-latest

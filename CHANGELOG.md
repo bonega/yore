@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-06-16
+- Add an optional `cp437g` feature: the `CP437G` code page (CP437 overlaid with the IBM-Graphics glyphs at the C0 control byte range) for VGA text-mode rendering. Off by default.
+
 ## [2.0.1] - 2026-06-14
 - Speed up the allocation-free `decode_byte` primitive (~2-4x) in `no_std`/no-allocator builds: the decode table now stores codepoints directly, so `decode_byte` lowers to a single indexed load. No API changes.
 
