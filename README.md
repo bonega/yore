@@ -2,7 +2,7 @@
 
 A Rust library for decoding and encoding character sets based on OEM code pages.
 
-[![yore at crates.io](https://img.shields.io/badge/crates.io-2.0.1-blue)](https://crates.io/crates/yore)
+[![yore at crates.io](https://img.shields.io/badge/crates.io-2.1.0-blue)](https://crates.io/crates/yore)
 [![yore at docs.rs](https://docs.rs/yore/badge.svg)](https://docs.rs/yore)
 
 # Features
@@ -19,7 +19,7 @@ Add `yore` to your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-yore = "2.0.1"
+yore = "2.1.0"
 ```
 
 ## CP437G (VGA text-mode glyphs)
@@ -31,7 +31,7 @@ buffer from a `no_std` kernel.
 
 ```toml
 [dependencies]
-yore = { version = "2.0.0", features = ["cp437g"] }
+yore = { version = "2.1.0", features = ["cp437g"] }
 ```
 
 ```rust
@@ -137,10 +137,10 @@ requires the `alloc` feature. Without it, only the allocation-free
 ```toml
 [dependencies]
 # no_std with an allocator: keep the full Cow-returning API
-yore = { version = "2.0.1", default-features = false, features = ["alloc"] }
+yore = { version = "2.1.0", default-features = false, features = ["alloc"] }
 
 # no_std without an allocator: char primitives only
-yore = { version = "2.0.1", default-features = false }
+yore = { version = "2.1.0", default-features = false }
 ```
 
 ```rust
