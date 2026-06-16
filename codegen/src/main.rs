@@ -18,12 +18,13 @@ fn main() -> Result<()> {
     }
 
     // CP437G: CP437 overlaid with the IBM-Graphics glyphs at the C0 control
-    // byte range, per unicode.org's IBMGRAPH.TXT.
+    // byte range, transcribed from unicode.org's IBMGRAPH.TXT.
     //
     // On VGA text mode the BIOS glyph ROM renders bytes 0x01-0x1F and 0x7F as
     // pictographs (smiley, suits, arrows, ...) rather than control codes. This
     // variant makes those glyphs representable so a kernel can drive the text
-    // buffer directly. Some glyphs share a byte with an ASCII control (0x09 ○,
+    // buffer directly. 0x00 is left as NUL (the glyph ROM renders it blank).
+    // Some glyphs share a byte with an ASCII control (0x09 ○,
     // 0x0A ◙, 0x0D ♪); callers that want to treat `\n` etc. as line-control
     // should intercept the source `char` before calling `encode_char` (yore's
     // ASCII fast-path still encodes `'\t'/'\n'/'\r'` to those same bytes).
