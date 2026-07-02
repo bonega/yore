@@ -4,15 +4,13 @@
 use alloc::borrow::Cow;
 
 use crate::{
-    decoder::{self, IncompleteEntry, IncompleteLen},
+    decoder::{self, Entry},
     encoder::Encoder,
     CodePage,
 };
 
 #[cfg(feature = "alloc")]
-use crate::decoder::{
-    complete::decode_helper as decode_helper_lossy, incomplete::decode_helper, CompleteEntry,
-};
+use crate::decoder::{complete::decode_helper as decode_helper_lossy, incomplete::decode_helper};
 
 #[cfg(feature = "alloc")]
 use crate::{DecodeError, EncodeError};
@@ -88,20 +86,9 @@ impl CP874 {
     #[inline(always)]
     pub fn decode_byte(self, b: u8) -> Option<char> {
         // The UTF-8 decode table is already in memory for the bulk `decode`
-        // path, so decode the entry's stored bytes from the length we have
-        // rather than carrying a second (codepoint) table.
-        let e = DECODE_TABLE[b as usize]?;
-        let cp = match e.len as u32 {
-            1 => e.buf[0] as u32,
-            2 => ((e.buf[0] as u32 & 0x1F) << 6) | (e.buf[1] as u32 & 0x3F),
-            _ => {
-                ((e.buf[0] as u32 & 0x0F) << 12)
-                    | ((e.buf[1] as u32 & 0x3F) << 6)
-                    | (e.buf[2] as u32 & 0x3F)
-            }
-        };
-        // SAFETY: table contents are valid UTF-8 for exactly one scalar value.
-        Some(unsafe { char::from_u32_unchecked(cp) })
+        // path, so decode the entry rather than carrying a second (codepoint)
+        // table.
+        DECODE_TABLE[b as usize].map(|e| e.to_char())
     }
 
     /// Decode a single CP874 byte into its character.
@@ -199,1002 +186,258 @@ impl CodePage for CP874 {
 }
 
 const DECODE_TABLE: decoder::incomplete::Table = [
-    Some(IncompleteEntry {
-        buf: [0x00, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x01, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x02, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x03, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x04, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x05, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x06, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x07, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x08, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x09, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x0A, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x0B, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x0C, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x0D, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x0E, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x0F, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x10, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x11, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x12, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x13, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x14, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x15, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x16, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x17, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x18, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x19, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x1A, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x1B, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x1C, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x1D, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x1E, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x1F, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x20, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x21, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x22, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x23, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x24, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x25, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x26, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x27, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x28, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x29, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x2A, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x2B, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x2C, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x2D, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x2E, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x2F, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x30, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x31, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x32, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x33, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x34, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x35, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x36, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x37, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x38, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x39, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x3A, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x3B, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x3C, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x3D, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x3E, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x3F, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x40, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x41, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x42, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x43, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x44, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x45, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x46, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x47, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x48, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x49, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x4A, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x4B, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x4C, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x4D, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x4E, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x4F, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x50, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x51, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x52, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x53, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x54, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x55, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x56, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x57, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x58, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x59, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x5A, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x5B, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x5C, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x5D, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x5E, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x5F, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x60, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x61, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x62, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x63, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x64, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x65, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x66, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x67, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x68, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x69, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x6A, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x6B, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x6C, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x6D, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x6E, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x6F, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x70, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x71, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x72, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x73, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x74, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x75, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x76, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x77, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x78, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x79, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x7A, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x7B, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x7C, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x7D, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x7E, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0x7F, 0x00, 0x00],
-        len: IncompleteLen::One,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x82, 0xAC],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x81, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x82, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x83, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x84, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x80, 0xA6],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x86, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x87, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x88, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x89, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x8A, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x8B, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x8C, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x8D, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x8E, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x8F, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x90, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x80, 0x98],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x80, 0x99],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x80, 0x9C],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x80, 0x9D],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x80, 0xA2],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x80, 0x93],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE2, 0x80, 0x94],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x98, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x99, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x9A, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x9B, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x9C, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x9D, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x9E, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0x9F, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xC2, 0xA0, 0x00],
-        len: IncompleteLen::Two,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x81],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x82],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x83],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x84],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x85],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x86],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x87],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x88],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x89],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x8A],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x8B],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x8C],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x8D],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x8E],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x8F],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x90],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x91],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x92],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x93],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x94],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x95],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x96],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x97],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x98],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x99],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x9A],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x9B],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x9C],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x9D],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x9E],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0x9F],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA0],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA1],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA2],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA3],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA4],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA5],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA6],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA7],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA8],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xA9],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xAA],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xAB],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xAC],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xAD],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xAE],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xAF],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB0],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB1],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB2],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB3],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB4],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB5],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB6],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB7],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB8],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xB9],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xBA],
-        len: IncompleteLen::Three,
-    }),
+    Some(Entry::new([0x00, 0x00, 0x00], 1)),
+    Some(Entry::new([0x01, 0x00, 0x00], 1)),
+    Some(Entry::new([0x02, 0x00, 0x00], 1)),
+    Some(Entry::new([0x03, 0x00, 0x00], 1)),
+    Some(Entry::new([0x04, 0x00, 0x00], 1)),
+    Some(Entry::new([0x05, 0x00, 0x00], 1)),
+    Some(Entry::new([0x06, 0x00, 0x00], 1)),
+    Some(Entry::new([0x07, 0x00, 0x00], 1)),
+    Some(Entry::new([0x08, 0x00, 0x00], 1)),
+    Some(Entry::new([0x09, 0x00, 0x00], 1)),
+    Some(Entry::new([0x0A, 0x00, 0x00], 1)),
+    Some(Entry::new([0x0B, 0x00, 0x00], 1)),
+    Some(Entry::new([0x0C, 0x00, 0x00], 1)),
+    Some(Entry::new([0x0D, 0x00, 0x00], 1)),
+    Some(Entry::new([0x0E, 0x00, 0x00], 1)),
+    Some(Entry::new([0x0F, 0x00, 0x00], 1)),
+    Some(Entry::new([0x10, 0x00, 0x00], 1)),
+    Some(Entry::new([0x11, 0x00, 0x00], 1)),
+    Some(Entry::new([0x12, 0x00, 0x00], 1)),
+    Some(Entry::new([0x13, 0x00, 0x00], 1)),
+    Some(Entry::new([0x14, 0x00, 0x00], 1)),
+    Some(Entry::new([0x15, 0x00, 0x00], 1)),
+    Some(Entry::new([0x16, 0x00, 0x00], 1)),
+    Some(Entry::new([0x17, 0x00, 0x00], 1)),
+    Some(Entry::new([0x18, 0x00, 0x00], 1)),
+    Some(Entry::new([0x19, 0x00, 0x00], 1)),
+    Some(Entry::new([0x1A, 0x00, 0x00], 1)),
+    Some(Entry::new([0x1B, 0x00, 0x00], 1)),
+    Some(Entry::new([0x1C, 0x00, 0x00], 1)),
+    Some(Entry::new([0x1D, 0x00, 0x00], 1)),
+    Some(Entry::new([0x1E, 0x00, 0x00], 1)),
+    Some(Entry::new([0x1F, 0x00, 0x00], 1)),
+    Some(Entry::new([0x20, 0x00, 0x00], 1)),
+    Some(Entry::new([0x21, 0x00, 0x00], 1)),
+    Some(Entry::new([0x22, 0x00, 0x00], 1)),
+    Some(Entry::new([0x23, 0x00, 0x00], 1)),
+    Some(Entry::new([0x24, 0x00, 0x00], 1)),
+    Some(Entry::new([0x25, 0x00, 0x00], 1)),
+    Some(Entry::new([0x26, 0x00, 0x00], 1)),
+    Some(Entry::new([0x27, 0x00, 0x00], 1)),
+    Some(Entry::new([0x28, 0x00, 0x00], 1)),
+    Some(Entry::new([0x29, 0x00, 0x00], 1)),
+    Some(Entry::new([0x2A, 0x00, 0x00], 1)),
+    Some(Entry::new([0x2B, 0x00, 0x00], 1)),
+    Some(Entry::new([0x2C, 0x00, 0x00], 1)),
+    Some(Entry::new([0x2D, 0x00, 0x00], 1)),
+    Some(Entry::new([0x2E, 0x00, 0x00], 1)),
+    Some(Entry::new([0x2F, 0x00, 0x00], 1)),
+    Some(Entry::new([0x30, 0x00, 0x00], 1)),
+    Some(Entry::new([0x31, 0x00, 0x00], 1)),
+    Some(Entry::new([0x32, 0x00, 0x00], 1)),
+    Some(Entry::new([0x33, 0x00, 0x00], 1)),
+    Some(Entry::new([0x34, 0x00, 0x00], 1)),
+    Some(Entry::new([0x35, 0x00, 0x00], 1)),
+    Some(Entry::new([0x36, 0x00, 0x00], 1)),
+    Some(Entry::new([0x37, 0x00, 0x00], 1)),
+    Some(Entry::new([0x38, 0x00, 0x00], 1)),
+    Some(Entry::new([0x39, 0x00, 0x00], 1)),
+    Some(Entry::new([0x3A, 0x00, 0x00], 1)),
+    Some(Entry::new([0x3B, 0x00, 0x00], 1)),
+    Some(Entry::new([0x3C, 0x00, 0x00], 1)),
+    Some(Entry::new([0x3D, 0x00, 0x00], 1)),
+    Some(Entry::new([0x3E, 0x00, 0x00], 1)),
+    Some(Entry::new([0x3F, 0x00, 0x00], 1)),
+    Some(Entry::new([0x40, 0x00, 0x00], 1)),
+    Some(Entry::new([0x41, 0x00, 0x00], 1)),
+    Some(Entry::new([0x42, 0x00, 0x00], 1)),
+    Some(Entry::new([0x43, 0x00, 0x00], 1)),
+    Some(Entry::new([0x44, 0x00, 0x00], 1)),
+    Some(Entry::new([0x45, 0x00, 0x00], 1)),
+    Some(Entry::new([0x46, 0x00, 0x00], 1)),
+    Some(Entry::new([0x47, 0x00, 0x00], 1)),
+    Some(Entry::new([0x48, 0x00, 0x00], 1)),
+    Some(Entry::new([0x49, 0x00, 0x00], 1)),
+    Some(Entry::new([0x4A, 0x00, 0x00], 1)),
+    Some(Entry::new([0x4B, 0x00, 0x00], 1)),
+    Some(Entry::new([0x4C, 0x00, 0x00], 1)),
+    Some(Entry::new([0x4D, 0x00, 0x00], 1)),
+    Some(Entry::new([0x4E, 0x00, 0x00], 1)),
+    Some(Entry::new([0x4F, 0x00, 0x00], 1)),
+    Some(Entry::new([0x50, 0x00, 0x00], 1)),
+    Some(Entry::new([0x51, 0x00, 0x00], 1)),
+    Some(Entry::new([0x52, 0x00, 0x00], 1)),
+    Some(Entry::new([0x53, 0x00, 0x00], 1)),
+    Some(Entry::new([0x54, 0x00, 0x00], 1)),
+    Some(Entry::new([0x55, 0x00, 0x00], 1)),
+    Some(Entry::new([0x56, 0x00, 0x00], 1)),
+    Some(Entry::new([0x57, 0x00, 0x00], 1)),
+    Some(Entry::new([0x58, 0x00, 0x00], 1)),
+    Some(Entry::new([0x59, 0x00, 0x00], 1)),
+    Some(Entry::new([0x5A, 0x00, 0x00], 1)),
+    Some(Entry::new([0x5B, 0x00, 0x00], 1)),
+    Some(Entry::new([0x5C, 0x00, 0x00], 1)),
+    Some(Entry::new([0x5D, 0x00, 0x00], 1)),
+    Some(Entry::new([0x5E, 0x00, 0x00], 1)),
+    Some(Entry::new([0x5F, 0x00, 0x00], 1)),
+    Some(Entry::new([0x60, 0x00, 0x00], 1)),
+    Some(Entry::new([0x61, 0x00, 0x00], 1)),
+    Some(Entry::new([0x62, 0x00, 0x00], 1)),
+    Some(Entry::new([0x63, 0x00, 0x00], 1)),
+    Some(Entry::new([0x64, 0x00, 0x00], 1)),
+    Some(Entry::new([0x65, 0x00, 0x00], 1)),
+    Some(Entry::new([0x66, 0x00, 0x00], 1)),
+    Some(Entry::new([0x67, 0x00, 0x00], 1)),
+    Some(Entry::new([0x68, 0x00, 0x00], 1)),
+    Some(Entry::new([0x69, 0x00, 0x00], 1)),
+    Some(Entry::new([0x6A, 0x00, 0x00], 1)),
+    Some(Entry::new([0x6B, 0x00, 0x00], 1)),
+    Some(Entry::new([0x6C, 0x00, 0x00], 1)),
+    Some(Entry::new([0x6D, 0x00, 0x00], 1)),
+    Some(Entry::new([0x6E, 0x00, 0x00], 1)),
+    Some(Entry::new([0x6F, 0x00, 0x00], 1)),
+    Some(Entry::new([0x70, 0x00, 0x00], 1)),
+    Some(Entry::new([0x71, 0x00, 0x00], 1)),
+    Some(Entry::new([0x72, 0x00, 0x00], 1)),
+    Some(Entry::new([0x73, 0x00, 0x00], 1)),
+    Some(Entry::new([0x74, 0x00, 0x00], 1)),
+    Some(Entry::new([0x75, 0x00, 0x00], 1)),
+    Some(Entry::new([0x76, 0x00, 0x00], 1)),
+    Some(Entry::new([0x77, 0x00, 0x00], 1)),
+    Some(Entry::new([0x78, 0x00, 0x00], 1)),
+    Some(Entry::new([0x79, 0x00, 0x00], 1)),
+    Some(Entry::new([0x7A, 0x00, 0x00], 1)),
+    Some(Entry::new([0x7B, 0x00, 0x00], 1)),
+    Some(Entry::new([0x7C, 0x00, 0x00], 1)),
+    Some(Entry::new([0x7D, 0x00, 0x00], 1)),
+    Some(Entry::new([0x7E, 0x00, 0x00], 1)),
+    Some(Entry::new([0x7F, 0x00, 0x00], 1)),
+    Some(Entry::new([0xE2, 0x82, 0xAC], 3)),
+    Some(Entry::new([0xC2, 0x81, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x82, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x83, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x84, 0x00], 2)),
+    Some(Entry::new([0xE2, 0x80, 0xA6], 3)),
+    Some(Entry::new([0xC2, 0x86, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x87, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x88, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x89, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x8A, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x8B, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x8C, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x8D, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x8E, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x8F, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x90, 0x00], 2)),
+    Some(Entry::new([0xE2, 0x80, 0x98], 3)),
+    Some(Entry::new([0xE2, 0x80, 0x99], 3)),
+    Some(Entry::new([0xE2, 0x80, 0x9C], 3)),
+    Some(Entry::new([0xE2, 0x80, 0x9D], 3)),
+    Some(Entry::new([0xE2, 0x80, 0xA2], 3)),
+    Some(Entry::new([0xE2, 0x80, 0x93], 3)),
+    Some(Entry::new([0xE2, 0x80, 0x94], 3)),
+    Some(Entry::new([0xC2, 0x98, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x99, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x9A, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x9B, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x9C, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x9D, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x9E, 0x00], 2)),
+    Some(Entry::new([0xC2, 0x9F, 0x00], 2)),
+    Some(Entry::new([0xC2, 0xA0, 0x00], 2)),
+    Some(Entry::new([0xE0, 0xB8, 0x81], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x82], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x83], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x84], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x85], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x86], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x87], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x88], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x89], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x8A], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x8B], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x8C], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x8D], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x8E], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x8F], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x90], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x91], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x92], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x93], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x94], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x95], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x96], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x97], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x98], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x99], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x9A], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x9B], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x9C], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x9D], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x9E], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0x9F], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA0], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA1], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA2], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA3], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA4], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA5], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA6], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA7], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA8], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xA9], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xAA], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xAB], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xAC], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xAD], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xAE], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xAF], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB0], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB1], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB2], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB3], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB4], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB5], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB6], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB7], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB8], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xB9], 3)),
+    Some(Entry::new([0xE0, 0xB8, 0xBA], 3)),
     None,
     None,
     None,
     None,
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB8, 0xBF],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x80],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x81],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x82],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x83],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x84],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x85],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x86],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x87],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x88],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x89],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x8A],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x8B],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x8C],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x8D],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x8E],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x8F],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x90],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x91],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x92],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x93],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x94],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x95],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x96],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x97],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x98],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x99],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x9A],
-        len: IncompleteLen::Three,
-    }),
-    Some(IncompleteEntry {
-        buf: [0xE0, 0xB9, 0x9B],
-        len: IncompleteLen::Three,
-    }),
+    Some(Entry::new([0xE0, 0xB8, 0xBF], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x80], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x81], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x82], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x83], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x84], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x85], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x86], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x87], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x88], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x89], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x8A], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x8B], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x8C], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x8D], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x8E], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x8F], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x90], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x91], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x92], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x93], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x94], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x95], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x96], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x97], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x98], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x99], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x9A], 3)),
+    Some(Entry::new([0xE0, 0xB9, 0x9B], 3)),
     None,
     None,
     None,
@@ -1202,1030 +445,262 @@ const DECODE_TABLE: decoder::incomplete::Table = [
 ];
 #[cfg(feature = "alloc")]
 const DECODE_TABLE_LOSSY: decoder::complete::Table = [
-    CompleteEntry {
-        buf: [0x00, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x01, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x02, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x03, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x04, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x05, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x06, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x07, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x08, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x09, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x0A, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x0B, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x0C, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x0D, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x0E, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x0F, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x10, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x11, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x12, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x13, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x14, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x15, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x16, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x17, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x18, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x19, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x1A, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x1B, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x1C, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x1D, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x1E, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x1F, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x20, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x21, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x22, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x23, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x24, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x25, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x26, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x27, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x28, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x29, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x2A, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x2B, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x2C, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x2D, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x2E, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x2F, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x30, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x31, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x32, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x33, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x34, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x35, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x36, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x37, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x38, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x39, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x3A, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x3B, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x3C, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x3D, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x3E, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x3F, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x40, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x41, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x42, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x43, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x44, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x45, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x46, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x47, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x48, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x49, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x4A, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x4B, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x4C, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x4D, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x4E, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x4F, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x50, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x51, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x52, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x53, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x54, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x55, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x56, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x57, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x58, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x59, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x5A, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x5B, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x5C, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x5D, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x5E, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x5F, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x60, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x61, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x62, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x63, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x64, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x65, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x66, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x67, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x68, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x69, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x6A, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x6B, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x6C, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x6D, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x6E, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x6F, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x70, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x71, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x72, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x73, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x74, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x75, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x76, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x77, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x78, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x79, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x7A, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x7B, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x7C, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x7D, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x7E, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0x7F, 0x00, 0x00],
-        len: 1,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x82, 0xAC],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x81, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x82, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x83, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x84, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x80, 0xA6],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x86, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x87, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x88, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x89, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x8A, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x8B, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x8C, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x8D, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x8E, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x8F, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x90, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x80, 0x98],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x80, 0x99],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x80, 0x9C],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x80, 0x9D],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x80, 0xA2],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x80, 0x93],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE2, 0x80, 0x94],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x98, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x99, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x9A, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x9B, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x9C, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x9D, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x9E, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0x9F, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xC2, 0xA0, 0x00],
-        len: 2,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x81],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x82],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x83],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x84],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x85],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x86],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x87],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x88],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x89],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x8A],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x8B],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x8C],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x8D],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x8E],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x8F],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x90],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x91],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x92],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x93],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x94],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x95],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x96],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x97],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x98],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x99],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x9A],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x9B],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x9C],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x9D],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x9E],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0x9F],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA0],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA1],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA2],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA3],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA4],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA5],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA6],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA7],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA8],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xA9],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xAA],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xAB],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xAC],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xAD],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xAE],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xAF],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB0],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB1],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB2],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB3],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB4],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB5],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB6],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB7],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB8],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xB9],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xBA],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xEF, 0xBF, 0xBD],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xEF, 0xBF, 0xBD],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xEF, 0xBF, 0xBD],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xEF, 0xBF, 0xBD],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB8, 0xBF],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x80],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x81],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x82],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x83],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x84],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x85],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x86],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x87],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x88],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x89],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x8A],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x8B],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x8C],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x8D],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x8E],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x8F],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x90],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x91],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x92],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x93],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x94],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x95],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x96],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x97],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x98],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x99],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x9A],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xE0, 0xB9, 0x9B],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xEF, 0xBF, 0xBD],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xEF, 0xBF, 0xBD],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xEF, 0xBF, 0xBD],
-        len: 3,
-    },
-    CompleteEntry {
-        buf: [0xEF, 0xBF, 0xBD],
-        len: 3,
-    },
+    Entry::new([0x00, 0x00, 0x00], 1),
+    Entry::new([0x01, 0x00, 0x00], 1),
+    Entry::new([0x02, 0x00, 0x00], 1),
+    Entry::new([0x03, 0x00, 0x00], 1),
+    Entry::new([0x04, 0x00, 0x00], 1),
+    Entry::new([0x05, 0x00, 0x00], 1),
+    Entry::new([0x06, 0x00, 0x00], 1),
+    Entry::new([0x07, 0x00, 0x00], 1),
+    Entry::new([0x08, 0x00, 0x00], 1),
+    Entry::new([0x09, 0x00, 0x00], 1),
+    Entry::new([0x0A, 0x00, 0x00], 1),
+    Entry::new([0x0B, 0x00, 0x00], 1),
+    Entry::new([0x0C, 0x00, 0x00], 1),
+    Entry::new([0x0D, 0x00, 0x00], 1),
+    Entry::new([0x0E, 0x00, 0x00], 1),
+    Entry::new([0x0F, 0x00, 0x00], 1),
+    Entry::new([0x10, 0x00, 0x00], 1),
+    Entry::new([0x11, 0x00, 0x00], 1),
+    Entry::new([0x12, 0x00, 0x00], 1),
+    Entry::new([0x13, 0x00, 0x00], 1),
+    Entry::new([0x14, 0x00, 0x00], 1),
+    Entry::new([0x15, 0x00, 0x00], 1),
+    Entry::new([0x16, 0x00, 0x00], 1),
+    Entry::new([0x17, 0x00, 0x00], 1),
+    Entry::new([0x18, 0x00, 0x00], 1),
+    Entry::new([0x19, 0x00, 0x00], 1),
+    Entry::new([0x1A, 0x00, 0x00], 1),
+    Entry::new([0x1B, 0x00, 0x00], 1),
+    Entry::new([0x1C, 0x00, 0x00], 1),
+    Entry::new([0x1D, 0x00, 0x00], 1),
+    Entry::new([0x1E, 0x00, 0x00], 1),
+    Entry::new([0x1F, 0x00, 0x00], 1),
+    Entry::new([0x20, 0x00, 0x00], 1),
+    Entry::new([0x21, 0x00, 0x00], 1),
+    Entry::new([0x22, 0x00, 0x00], 1),
+    Entry::new([0x23, 0x00, 0x00], 1),
+    Entry::new([0x24, 0x00, 0x00], 1),
+    Entry::new([0x25, 0x00, 0x00], 1),
+    Entry::new([0x26, 0x00, 0x00], 1),
+    Entry::new([0x27, 0x00, 0x00], 1),
+    Entry::new([0x28, 0x00, 0x00], 1),
+    Entry::new([0x29, 0x00, 0x00], 1),
+    Entry::new([0x2A, 0x00, 0x00], 1),
+    Entry::new([0x2B, 0x00, 0x00], 1),
+    Entry::new([0x2C, 0x00, 0x00], 1),
+    Entry::new([0x2D, 0x00, 0x00], 1),
+    Entry::new([0x2E, 0x00, 0x00], 1),
+    Entry::new([0x2F, 0x00, 0x00], 1),
+    Entry::new([0x30, 0x00, 0x00], 1),
+    Entry::new([0x31, 0x00, 0x00], 1),
+    Entry::new([0x32, 0x00, 0x00], 1),
+    Entry::new([0x33, 0x00, 0x00], 1),
+    Entry::new([0x34, 0x00, 0x00], 1),
+    Entry::new([0x35, 0x00, 0x00], 1),
+    Entry::new([0x36, 0x00, 0x00], 1),
+    Entry::new([0x37, 0x00, 0x00], 1),
+    Entry::new([0x38, 0x00, 0x00], 1),
+    Entry::new([0x39, 0x00, 0x00], 1),
+    Entry::new([0x3A, 0x00, 0x00], 1),
+    Entry::new([0x3B, 0x00, 0x00], 1),
+    Entry::new([0x3C, 0x00, 0x00], 1),
+    Entry::new([0x3D, 0x00, 0x00], 1),
+    Entry::new([0x3E, 0x00, 0x00], 1),
+    Entry::new([0x3F, 0x00, 0x00], 1),
+    Entry::new([0x40, 0x00, 0x00], 1),
+    Entry::new([0x41, 0x00, 0x00], 1),
+    Entry::new([0x42, 0x00, 0x00], 1),
+    Entry::new([0x43, 0x00, 0x00], 1),
+    Entry::new([0x44, 0x00, 0x00], 1),
+    Entry::new([0x45, 0x00, 0x00], 1),
+    Entry::new([0x46, 0x00, 0x00], 1),
+    Entry::new([0x47, 0x00, 0x00], 1),
+    Entry::new([0x48, 0x00, 0x00], 1),
+    Entry::new([0x49, 0x00, 0x00], 1),
+    Entry::new([0x4A, 0x00, 0x00], 1),
+    Entry::new([0x4B, 0x00, 0x00], 1),
+    Entry::new([0x4C, 0x00, 0x00], 1),
+    Entry::new([0x4D, 0x00, 0x00], 1),
+    Entry::new([0x4E, 0x00, 0x00], 1),
+    Entry::new([0x4F, 0x00, 0x00], 1),
+    Entry::new([0x50, 0x00, 0x00], 1),
+    Entry::new([0x51, 0x00, 0x00], 1),
+    Entry::new([0x52, 0x00, 0x00], 1),
+    Entry::new([0x53, 0x00, 0x00], 1),
+    Entry::new([0x54, 0x00, 0x00], 1),
+    Entry::new([0x55, 0x00, 0x00], 1),
+    Entry::new([0x56, 0x00, 0x00], 1),
+    Entry::new([0x57, 0x00, 0x00], 1),
+    Entry::new([0x58, 0x00, 0x00], 1),
+    Entry::new([0x59, 0x00, 0x00], 1),
+    Entry::new([0x5A, 0x00, 0x00], 1),
+    Entry::new([0x5B, 0x00, 0x00], 1),
+    Entry::new([0x5C, 0x00, 0x00], 1),
+    Entry::new([0x5D, 0x00, 0x00], 1),
+    Entry::new([0x5E, 0x00, 0x00], 1),
+    Entry::new([0x5F, 0x00, 0x00], 1),
+    Entry::new([0x60, 0x00, 0x00], 1),
+    Entry::new([0x61, 0x00, 0x00], 1),
+    Entry::new([0x62, 0x00, 0x00], 1),
+    Entry::new([0x63, 0x00, 0x00], 1),
+    Entry::new([0x64, 0x00, 0x00], 1),
+    Entry::new([0x65, 0x00, 0x00], 1),
+    Entry::new([0x66, 0x00, 0x00], 1),
+    Entry::new([0x67, 0x00, 0x00], 1),
+    Entry::new([0x68, 0x00, 0x00], 1),
+    Entry::new([0x69, 0x00, 0x00], 1),
+    Entry::new([0x6A, 0x00, 0x00], 1),
+    Entry::new([0x6B, 0x00, 0x00], 1),
+    Entry::new([0x6C, 0x00, 0x00], 1),
+    Entry::new([0x6D, 0x00, 0x00], 1),
+    Entry::new([0x6E, 0x00, 0x00], 1),
+    Entry::new([0x6F, 0x00, 0x00], 1),
+    Entry::new([0x70, 0x00, 0x00], 1),
+    Entry::new([0x71, 0x00, 0x00], 1),
+    Entry::new([0x72, 0x00, 0x00], 1),
+    Entry::new([0x73, 0x00, 0x00], 1),
+    Entry::new([0x74, 0x00, 0x00], 1),
+    Entry::new([0x75, 0x00, 0x00], 1),
+    Entry::new([0x76, 0x00, 0x00], 1),
+    Entry::new([0x77, 0x00, 0x00], 1),
+    Entry::new([0x78, 0x00, 0x00], 1),
+    Entry::new([0x79, 0x00, 0x00], 1),
+    Entry::new([0x7A, 0x00, 0x00], 1),
+    Entry::new([0x7B, 0x00, 0x00], 1),
+    Entry::new([0x7C, 0x00, 0x00], 1),
+    Entry::new([0x7D, 0x00, 0x00], 1),
+    Entry::new([0x7E, 0x00, 0x00], 1),
+    Entry::new([0x7F, 0x00, 0x00], 1),
+    Entry::new([0xE2, 0x82, 0xAC], 3),
+    Entry::new([0xC2, 0x81, 0x00], 2),
+    Entry::new([0xC2, 0x82, 0x00], 2),
+    Entry::new([0xC2, 0x83, 0x00], 2),
+    Entry::new([0xC2, 0x84, 0x00], 2),
+    Entry::new([0xE2, 0x80, 0xA6], 3),
+    Entry::new([0xC2, 0x86, 0x00], 2),
+    Entry::new([0xC2, 0x87, 0x00], 2),
+    Entry::new([0xC2, 0x88, 0x00], 2),
+    Entry::new([0xC2, 0x89, 0x00], 2),
+    Entry::new([0xC2, 0x8A, 0x00], 2),
+    Entry::new([0xC2, 0x8B, 0x00], 2),
+    Entry::new([0xC2, 0x8C, 0x00], 2),
+    Entry::new([0xC2, 0x8D, 0x00], 2),
+    Entry::new([0xC2, 0x8E, 0x00], 2),
+    Entry::new([0xC2, 0x8F, 0x00], 2),
+    Entry::new([0xC2, 0x90, 0x00], 2),
+    Entry::new([0xE2, 0x80, 0x98], 3),
+    Entry::new([0xE2, 0x80, 0x99], 3),
+    Entry::new([0xE2, 0x80, 0x9C], 3),
+    Entry::new([0xE2, 0x80, 0x9D], 3),
+    Entry::new([0xE2, 0x80, 0xA2], 3),
+    Entry::new([0xE2, 0x80, 0x93], 3),
+    Entry::new([0xE2, 0x80, 0x94], 3),
+    Entry::new([0xC2, 0x98, 0x00], 2),
+    Entry::new([0xC2, 0x99, 0x00], 2),
+    Entry::new([0xC2, 0x9A, 0x00], 2),
+    Entry::new([0xC2, 0x9B, 0x00], 2),
+    Entry::new([0xC2, 0x9C, 0x00], 2),
+    Entry::new([0xC2, 0x9D, 0x00], 2),
+    Entry::new([0xC2, 0x9E, 0x00], 2),
+    Entry::new([0xC2, 0x9F, 0x00], 2),
+    Entry::new([0xC2, 0xA0, 0x00], 2),
+    Entry::new([0xE0, 0xB8, 0x81], 3),
+    Entry::new([0xE0, 0xB8, 0x82], 3),
+    Entry::new([0xE0, 0xB8, 0x83], 3),
+    Entry::new([0xE0, 0xB8, 0x84], 3),
+    Entry::new([0xE0, 0xB8, 0x85], 3),
+    Entry::new([0xE0, 0xB8, 0x86], 3),
+    Entry::new([0xE0, 0xB8, 0x87], 3),
+    Entry::new([0xE0, 0xB8, 0x88], 3),
+    Entry::new([0xE0, 0xB8, 0x89], 3),
+    Entry::new([0xE0, 0xB8, 0x8A], 3),
+    Entry::new([0xE0, 0xB8, 0x8B], 3),
+    Entry::new([0xE0, 0xB8, 0x8C], 3),
+    Entry::new([0xE0, 0xB8, 0x8D], 3),
+    Entry::new([0xE0, 0xB8, 0x8E], 3),
+    Entry::new([0xE0, 0xB8, 0x8F], 3),
+    Entry::new([0xE0, 0xB8, 0x90], 3),
+    Entry::new([0xE0, 0xB8, 0x91], 3),
+    Entry::new([0xE0, 0xB8, 0x92], 3),
+    Entry::new([0xE0, 0xB8, 0x93], 3),
+    Entry::new([0xE0, 0xB8, 0x94], 3),
+    Entry::new([0xE0, 0xB8, 0x95], 3),
+    Entry::new([0xE0, 0xB8, 0x96], 3),
+    Entry::new([0xE0, 0xB8, 0x97], 3),
+    Entry::new([0xE0, 0xB8, 0x98], 3),
+    Entry::new([0xE0, 0xB8, 0x99], 3),
+    Entry::new([0xE0, 0xB8, 0x9A], 3),
+    Entry::new([0xE0, 0xB8, 0x9B], 3),
+    Entry::new([0xE0, 0xB8, 0x9C], 3),
+    Entry::new([0xE0, 0xB8, 0x9D], 3),
+    Entry::new([0xE0, 0xB8, 0x9E], 3),
+    Entry::new([0xE0, 0xB8, 0x9F], 3),
+    Entry::new([0xE0, 0xB8, 0xA0], 3),
+    Entry::new([0xE0, 0xB8, 0xA1], 3),
+    Entry::new([0xE0, 0xB8, 0xA2], 3),
+    Entry::new([0xE0, 0xB8, 0xA3], 3),
+    Entry::new([0xE0, 0xB8, 0xA4], 3),
+    Entry::new([0xE0, 0xB8, 0xA5], 3),
+    Entry::new([0xE0, 0xB8, 0xA6], 3),
+    Entry::new([0xE0, 0xB8, 0xA7], 3),
+    Entry::new([0xE0, 0xB8, 0xA8], 3),
+    Entry::new([0xE0, 0xB8, 0xA9], 3),
+    Entry::new([0xE0, 0xB8, 0xAA], 3),
+    Entry::new([0xE0, 0xB8, 0xAB], 3),
+    Entry::new([0xE0, 0xB8, 0xAC], 3),
+    Entry::new([0xE0, 0xB8, 0xAD], 3),
+    Entry::new([0xE0, 0xB8, 0xAE], 3),
+    Entry::new([0xE0, 0xB8, 0xAF], 3),
+    Entry::new([0xE0, 0xB8, 0xB0], 3),
+    Entry::new([0xE0, 0xB8, 0xB1], 3),
+    Entry::new([0xE0, 0xB8, 0xB2], 3),
+    Entry::new([0xE0, 0xB8, 0xB3], 3),
+    Entry::new([0xE0, 0xB8, 0xB4], 3),
+    Entry::new([0xE0, 0xB8, 0xB5], 3),
+    Entry::new([0xE0, 0xB8, 0xB6], 3),
+    Entry::new([0xE0, 0xB8, 0xB7], 3),
+    Entry::new([0xE0, 0xB8, 0xB8], 3),
+    Entry::new([0xE0, 0xB8, 0xB9], 3),
+    Entry::new([0xE0, 0xB8, 0xBA], 3),
+    Entry::new([0xEF, 0xBF, 0xBD], 3),
+    Entry::new([0xEF, 0xBF, 0xBD], 3),
+    Entry::new([0xEF, 0xBF, 0xBD], 3),
+    Entry::new([0xEF, 0xBF, 0xBD], 3),
+    Entry::new([0xE0, 0xB8, 0xBF], 3),
+    Entry::new([0xE0, 0xB9, 0x80], 3),
+    Entry::new([0xE0, 0xB9, 0x81], 3),
+    Entry::new([0xE0, 0xB9, 0x82], 3),
+    Entry::new([0xE0, 0xB9, 0x83], 3),
+    Entry::new([0xE0, 0xB9, 0x84], 3),
+    Entry::new([0xE0, 0xB9, 0x85], 3),
+    Entry::new([0xE0, 0xB9, 0x86], 3),
+    Entry::new([0xE0, 0xB9, 0x87], 3),
+    Entry::new([0xE0, 0xB9, 0x88], 3),
+    Entry::new([0xE0, 0xB9, 0x89], 3),
+    Entry::new([0xE0, 0xB9, 0x8A], 3),
+    Entry::new([0xE0, 0xB9, 0x8B], 3),
+    Entry::new([0xE0, 0xB9, 0x8C], 3),
+    Entry::new([0xE0, 0xB9, 0x8D], 3),
+    Entry::new([0xE0, 0xB9, 0x8E], 3),
+    Entry::new([0xE0, 0xB9, 0x8F], 3),
+    Entry::new([0xE0, 0xB9, 0x90], 3),
+    Entry::new([0xE0, 0xB9, 0x91], 3),
+    Entry::new([0xE0, 0xB9, 0x92], 3),
+    Entry::new([0xE0, 0xB9, 0x93], 3),
+    Entry::new([0xE0, 0xB9, 0x94], 3),
+    Entry::new([0xE0, 0xB9, 0x95], 3),
+    Entry::new([0xE0, 0xB9, 0x96], 3),
+    Entry::new([0xE0, 0xB9, 0x97], 3),
+    Entry::new([0xE0, 0xB9, 0x98], 3),
+    Entry::new([0xE0, 0xB9, 0x99], 3),
+    Entry::new([0xE0, 0xB9, 0x9A], 3),
+    Entry::new([0xE0, 0xB9, 0x9B], 3),
+    Entry::new([0xEF, 0xBF, 0xBD], 3),
+    Entry::new([0xEF, 0xBF, 0xBD], 3),
+    Entry::new([0xEF, 0xBF, 0xBD], 3),
+    Entry::new([0xEF, 0xBF, 0xBD], 3),
 ];
 
 // In the no-alloc build there is no bulk decoder, so `DECODE_TABLE` is consumed
@@ -2238,7 +713,7 @@ const DECODE_TABLE_CHAR: [Option<char>; 256] = {
     let mut i = 0;
     while i < 256 {
         t[i] = match DECODE_TABLE[i] {
-            Some(e) => Some(decoder::entry_to_char(e.buf, e.len as u32)),
+            Some(e) => Some(e.to_char()),
             None => None,
         };
         i += 1;
