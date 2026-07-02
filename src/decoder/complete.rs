@@ -5,33 +5,9 @@ use alloc::vec::Vec;
 #[cfg(feature = "alloc")]
 use core::mem;
 
+use super::Entry;
 #[cfg(feature = "alloc")]
 use super::{contains_nonascii, finalize_string, USIZE_SIZE};
-
-/// Entry for complete/lossy tables - optimized for branchless 4-byte writes
-/// Layout: [buf[0], buf[1], buf[2], len] for direct u32 store
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Entry {
-    pub buf: [u8; 3],
-    pub len: u8,
-}
-
-impl Entry {
-    /// Branchless write for complete tables
-    ///
-    /// # Safety
-    ///
-    /// dst must have at least four bytes of space remaining.
-    /// After execution dst will be advanced by the number of bytes written.
-    #[cfg(feature = "alloc")]
-    #[inline]
-    pub unsafe fn write(self, dst: &mut *mut u8) {
-        let word: u32 = mem::transmute(self);
-        dst.cast::<u32>().write_unaligned(word);
-        *dst = dst.add((word >> 24) as usize);
-    }
-}
 
 pub(crate) type Table = [Entry; 256];
 
@@ -101,6 +77,6 @@ pub(crate) fn decode_helper_non_ascii<'a>(table: &Table, bytes: &'a [u8]) -> Cow
 unsafe fn decode_slice(table: &Table, src: &[u8], dst: &mut *mut u8) {
     for b in src {
         let entry = table[*b as usize];
-        entry.write(dst);
+        entry.write_to(dst);
     }
 }

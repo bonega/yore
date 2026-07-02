@@ -11,55 +11,17 @@ use crate::DecodeError;
 #[cfg(feature = "alloc")]
 use super::{contains_nonascii, finalize_string, USIZE_SIZE};
 
-/// UTF8 length enum for incomplete tables (enables niche optimization with Option)
-#[derive(Copy, Clone)]
-#[repr(u8)]
-pub enum Len {
-    One = 1,
-    Two = 2,
-    Three = 3,
-}
+use super::Entry;
 
-/// Entry for incomplete tables - uses Len for niche-optimized Option<Entry>
-#[derive(Copy, Clone)]
-pub struct Entry {
-    pub buf: [u8; 3],
-    pub len: Len,
-}
-
-impl Entry {
-    #[cfg(feature = "alloc")]
-    pub fn from_char(c: char) -> Self {
-        let c_len = c.len_utf8();
-        assert!(c_len < 4);
-        let mut buf = [0; 3];
-        c.encode_utf8(&mut buf);
-        Entry {
-            buf,
-            len: match c_len {
-                1 => Len::One,
-                2 => Len::Two,
-                3 => Len::Three,
-                _ => unreachable!(),
-            },
-        }
-    }
-
-    /// # Safety
-    ///
-    /// dst must have at least three bytes of space remaining.
-    /// After execution dst will be advanced by the number of bytes written.
-    #[cfg(feature = "alloc")]
-    #[inline]
-    pub unsafe fn write(self, dst: &mut *mut u8) {
-        // Always copy 3 bytes (branchless), then advance by actual length
-        dst.copy_from_nonoverlapping(self.buf.as_ptr(), 3);
-        *dst = dst.add(self.len as usize);
-    }
-}
-
-/// Table for incomplete codepages using Option for niche optimization
+/// Table for incomplete codepages: a niche-packed [`Option<Entry>`](Option) per
+/// byte (`None` = undefined). [`Entry`](super::Entry) wraps a `NonZeroU32`, so
+/// `Option<Entry>` is four bytes with `None` represented as the all-zero `u32` —
+/// the read is a single load and the `None` check a test for zero.
 pub(crate) type Table = [Option<Entry>; 256];
+
+// The single-load decode relies on `Option<Entry>` niche-packing into four bytes
+// (`None` == all-zero `u32`); guaranteed by `Entry` wrapping a `NonZeroU32`.
+const _: () = assert!(core::mem::size_of::<Option<Entry>>() == 4);
 
 #[cfg(feature = "alloc")]
 #[inline(always)]
@@ -74,7 +36,8 @@ pub(crate) fn decode_helper<'a>(
         return Ok(s.into());
     }
 
-    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3);
+    // +1 for the branchless 4-byte entry write which may overshoot by 1 byte
+    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
     let mut dst = buffer.as_mut_ptr();
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
@@ -125,42 +88,16 @@ pub(crate) fn decode_helper_non_ascii<'a>(
     bytes: &'a [u8],
     fallback: Option<char>,
 ) -> Result<Cow<'a, str>, DecodeError> {
-    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3);
+    // +1 for the branchless 4-byte entry write which may overshoot by 1 byte
+    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
     let mut dst = buffer.as_mut_ptr();
     let fallback: Option<Entry> = fallback.map(Entry::from_char);
-    unsafe { decode_slice_inner::<false>(table, bytes, &mut dst, fallback) }?;
+    unsafe { decode_slice(table, bytes, &mut dst, fallback) }?;
     Ok(unsafe { finalize_string(buffer, dst) }.into())
 }
 
-/// Decode bytes using table lookup. ASCII_OPT enables fast path for ASCII bytes.
 /// # Safety
-/// `dst` must point to a buffer with at least `src.len() * 3` bytes of writable space remaining.
-#[cfg(feature = "alloc")]
-#[inline]
-unsafe fn decode_slice_inner<const ASCII_OPT: bool>(
-    table: &Table,
-    src: &[u8],
-    dst: &mut *mut u8,
-    fallback: Option<Entry>,
-) -> Result<(), DecodeError> {
-    for (i, &b) in src.iter().enumerate() {
-        if ASCII_OPT && b < 128 {
-            dst.write(b);
-            *dst = dst.add(1);
-        } else if let Some(fallback) = fallback {
-            table[b as usize].unwrap_or(fallback).write(dst);
-        } else {
-            table[b as usize]
-                .ok_or(DecodeError {
-                    position: i,
-                    value: b,
-                })?
-                .write(dst);
-        }
-    }
-    Ok(())
-}
-
+/// `dst` must point to a buffer with at least `src.len() * 3 + 1` bytes of writable space remaining.
 #[cfg(feature = "alloc")]
 #[inline]
 unsafe fn decode_slice(
@@ -169,5 +106,16 @@ unsafe fn decode_slice(
     dst: &mut *mut u8,
     fallback: Option<Entry>,
 ) -> Result<(), DecodeError> {
-    decode_slice_inner::<true>(table, src, dst, fallback)
+    for (i, &b) in src.iter().enumerate() {
+        match table[b as usize].or(fallback) {
+            Some(entry) => entry.write_to(dst),
+            None => {
+                return Err(DecodeError {
+                    position: i,
+                    value: b,
+                })
+            }
+        }
+    }
+    Ok(())
 }

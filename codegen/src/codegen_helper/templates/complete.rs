@@ -2,7 +2,7 @@
 use alloc::borrow::Cow;
 
 use crate::{
-    decoder::{self, CompleteEntry},
+    decoder::{self, Entry},
     encoder::Encoder,
     CodePage,
 };
@@ -49,20 +49,9 @@ impl CODERSTRUCT {
     #[inline(always)]
     pub fn decode_byte(self, b: u8) -> char {
         // The UTF-8 decode table is already in memory for the bulk `decode`
-        // path, so decode the entry's stored bytes from the length we have
-        // rather than carrying a second (codepoint) table.
-        let e = DECODE_TABLE[b as usize];
-        let cp = match e.len {
-            1 => e.buf[0] as u32,
-            2 => ((e.buf[0] as u32 & 0x1F) << 6) | (e.buf[1] as u32 & 0x3F),
-            _ => {
-                ((e.buf[0] as u32 & 0x0F) << 12)
-                    | ((e.buf[1] as u32 & 0x3F) << 6)
-                    | (e.buf[2] as u32 & 0x3F)
-            }
-        };
-        // SAFETY: table contents are valid UTF-8 for exactly one scalar value.
-        unsafe { char::from_u32_unchecked(cp) }
+        // path, so decode the entry rather than carrying a second (codepoint)
+        // table.
+        DECODE_TABLE[b as usize].to_char()
     }
 
     /// Decode a single CODERSTRUCT byte into its character.
@@ -149,8 +138,7 @@ const DECODE_TABLE_CHAR: [char; 256] = {
     let mut t = ['\0'; 256];
     let mut i = 0;
     while i < 256 {
-        let e = DECODE_TABLE[i];
-        t[i] = decoder::entry_to_char(e.buf, e.len as u32);
+        t[i] = DECODE_TABLE[i].to_char();
         i += 1;
     }
     t
