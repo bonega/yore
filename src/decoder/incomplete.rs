@@ -1,7 +1,5 @@
 #[cfg(feature = "alloc")]
 use alloc::borrow::Cow;
-#[cfg(feature = "alloc")]
-use core::mem;
 
 #[cfg(feature = "alloc")]
 use crate::DecodeError;
@@ -36,34 +34,24 @@ pub(crate) fn decode_helper<'a>(
 
     let mut writer = Utf8Writer::for_input_len(bytes.len());
 
-    // If we wouldn't gain anything from the word-at-a-time implementation, fall
-    // back to a scalar loop.
-    //
-    // We also do this for architectures where `size_of::<usize>()` isn't
-    // sufficient alignment for `usize`, because it's a weird edge case.
+    // Decode a word at a time; an all-ASCII word is appended verbatim.
     unsafe {
-        if bytes.len() < USIZE_SIZE || USIZE_SIZE < mem::align_of::<usize>() {
-            decode_slice(table, bytes, &mut writer, fallback)?;
-            return Ok(writer.finish().into());
-        }
-
-        let (prefix, aligned_bytes, suffix) = bytes.align_to::<usize>();
-        decode_slice(table, prefix, &mut writer, fallback)?;
-        for (i, chunk) in aligned_bytes.iter().enumerate() {
-            if contains_nonascii(*chunk) {
-                decode_slice(table, &chunk.to_ne_bytes(), &mut writer, fallback).map_err(
-                    |mut e| {
-                        e.position += prefix.len() + i * USIZE_SIZE;
-                        e
-                    },
-                )?;
+        let mut iter = bytes.chunks_exact(USIZE_SIZE);
+        for (i, chunk) in (&mut iter).enumerate() {
+            let chunk: &[u8; USIZE_SIZE] = chunk.try_into().unwrap();
+            let word = usize::from_ne_bytes(*chunk);
+            if contains_nonascii(word) {
+                decode_slice(table, chunk, &mut writer, fallback).map_err(|mut e| {
+                    e.position += i * USIZE_SIZE;
+                    e
+                })?;
             } else {
-                writer.push_ascii_word(*chunk);
+                writer.push_ascii_word(word);
             }
         }
 
-        decode_slice(table, suffix, &mut writer, fallback).map_err(|mut e| {
-            e.position += prefix.len() + aligned_bytes.len() * USIZE_SIZE;
+        decode_slice(table, iter.remainder(), &mut writer, fallback).map_err(|mut e| {
+            e.position += bytes.len() - iter.remainder().len();
             e
         })?;
         Ok(writer.finish().into())

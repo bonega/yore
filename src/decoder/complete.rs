@@ -1,7 +1,5 @@
 #[cfg(feature = "alloc")]
 use alloc::borrow::Cow;
-#[cfg(feature = "alloc")]
-use core::mem;
 
 use super::Entry;
 #[cfg(feature = "alloc")]
@@ -19,28 +17,20 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 
     let mut writer = Utf8Writer::for_input_len(src.len());
 
-    // If we wouldn't gain anything from the word-at-a-time implementation, fall
-    // back to a scalar loop.
-    //
-    // We also do this for architectures where `size_of::<usize>()` isn't
-    // sufficient alignment for `usize`, because it's a weird edge case.
+    // Decode a word at a time; an all-ASCII word is appended verbatim.
     unsafe {
-        if src.len() < USIZE_SIZE || USIZE_SIZE < mem::align_of::<usize>() {
-            decode_slice(table, src, &mut writer);
-            return writer.finish().into();
-        }
-
-        let (prefix, aligned_bytes, suffix) = src.align_to::<usize>();
-        decode_slice(table, prefix, &mut writer);
-        for chunk in aligned_bytes {
-            if contains_nonascii(*chunk) {
-                decode_slice(table, &chunk.to_ne_bytes(), &mut writer);
+        let mut iter = src.chunks_exact(USIZE_SIZE);
+        for chunk in &mut iter {
+            let chunk: &[u8; USIZE_SIZE] = chunk.try_into().unwrap();
+            let word = usize::from_ne_bytes(*chunk);
+            if contains_nonascii(word) {
+                decode_slice(table, chunk, &mut writer);
             } else {
-                writer.push_ascii_word(*chunk);
+                writer.push_ascii_word(word);
             }
         }
 
-        decode_slice(table, suffix, &mut writer);
+        decode_slice(table, iter.remainder(), &mut writer);
         writer.finish().into()
     }
 }
