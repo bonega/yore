@@ -60,38 +60,119 @@ impl Entry {
         unsafe { char::from_u32_unchecked(cp) }
     }
 
-    /// Store the entry's UTF-8 bytes at `*dst` and advance `dst` by `len`.
+    /// The entry packed as `[b0, b1, b2, len]` — little-endian on every target,
+    /// so the UTF-8 bytes land in sequence. Only the first [`len`](Self::len)
+    /// bytes are meaningful; the trailing `len` byte is overshoot to overwrite.
     #[cfg(feature = "alloc")]
     #[inline]
-    pub unsafe fn write_to(self, dst: &mut *mut u8) {
-        // SAFETY: the caller guarantees >= 4 writable bytes at `*dst`.
-        // `write_unaligned` needs no alignment (`dst` is a byte pointer into a
-        // `Vec<u8>`), and `to_le_bytes` fixes the in-memory order to
-        // `[b0, b1, b2, len]` on every target, so the UTF-8 bytes land in
-        // sequence regardless of host endianness.
-        dst.cast::<[u8; 4]>()
-            .write_unaligned(self.0.get().to_le_bytes());
-        // SAFETY: `len` is `1..=3`, so the advanced pointer stays within the
-        // reserved allocation
-        *dst = dst.add(self.len());
+    pub const fn utf8_word(self) -> [u8; 4] {
+        self.0.get().to_le_bytes()
     }
 }
 
 #[cfg(feature = "alloc")]
 const USIZE_SIZE: usize = mem::size_of::<usize>();
 
-/// Given [`buffer`] and end-ptr [`ptr`] set new length and shrink allocation
+/// A cursor that appends decoded UTF-8 into a [`Vec<u8>`]'s reserved capacity,
+/// then hands back a [`String`].
 ///
-/// # Safety
-///
-/// [`dst`] must be within allocated capacity of [`res`]
+/// It concentrates the bulk decoder's `unsafe` behind three primitives
+/// ([`push_entry`](Self::push_entry), [`push_ascii_word`](Self::push_ascii_word),
+/// [`finish`](Self::finish)); each documents the slack the caller must
+/// guarantee, and the cursor never leaves the allocation. The overshoot trick —
+/// `push_entry` stores a full 4-byte word but advances by the codepoint's
+/// `1..=3` bytes — lives here alone. Debug builds assert the slack on every
+/// write, so Miri and the fuzzers check it per byte.
 #[cfg(feature = "alloc")]
-#[inline]
-unsafe fn finalize_string(mut buffer: Vec<u8>, dst: *const u8) -> String {
-    let length = dst.offset_from(buffer.as_ptr()) as usize;
-    buffer.set_len(length);
-    buffer.shrink_to_fit();
-    String::from_utf8_unchecked(buffer)
+pub(crate) struct Utf8Writer {
+    buf: Vec<u8>,
+    /// Write cursor into `buf`'s spare capacity.
+    dst: *mut u8,
+    /// One-past-the-end sentinel; only its address is read, so the slack check
+    /// never reborrows `buf` (keeping provenance clean).
+    end: *mut u8,
+}
+
+#[cfg(feature = "alloc")]
+impl Utf8Writer {
+    /// Reserve enough capacity to decode `input_len` bytes.
+    ///
+    /// Each byte yields at most 3 UTF-8 bytes and the final
+    /// [`push_entry`](Self::push_entry) may overshoot by a full 4-byte word, so
+    /// `input_len * 3 + 1` is always enough and never leaves under 4 bytes of
+    /// slack before the last entry — the `push_*` preconditions then hold for
+    /// any full decode by construction.
+    #[inline]
+    pub fn for_input_len(input_len: usize) -> Self {
+        let cap = input_len * 3 + 1;
+        let mut buf: Vec<u8> = Vec::with_capacity(cap);
+        let dst = buf.as_mut_ptr();
+        // SAFETY: `Vec::with_capacity` reserved `cap` bytes, so `dst.add(cap)` is
+        // the one-past-the-end sentinel of a single allocation.
+        let end = unsafe { dst.add(cap) };
+        Self { buf, dst, end }
+    }
+
+    /// Bytes of reserved capacity still available at the cursor. Address-only
+    /// arithmetic, so it neither dereferences nor reborrows `buf`.
+    #[inline]
+    fn remaining(&self) -> usize {
+        self.end as usize - self.dst as usize
+    }
+
+    /// Append one decoded codepoint.
+    ///
+    /// Stores a fixed 4-byte word (the 3 UTF-8 bytes plus a length byte the next
+    /// write or [`finish`](Self::finish) overwrites) and advances by the real
+    /// length. The unconditional store is what keeps the loop branchless.
+    ///
+    /// # Safety
+    /// At least 4 bytes of capacity must remain at the cursor.
+    #[inline]
+    pub unsafe fn push_entry(&mut self, entry: Entry) {
+        debug_assert!(self.remaining() >= 4, "push_entry overran buffer");
+        // SAFETY: caller guarantees >= 4 writable bytes; `write_unaligned` needs
+        // no alignment for a byte cursor.
+        self.dst
+            .cast::<[u8; 4]>()
+            .write_unaligned(entry.utf8_word());
+        // SAFETY: `len` is `1..=3`, so the cursor stays within the allocation.
+        self.dst = self.dst.add(entry.len());
+    }
+
+    /// Append a whole `usize` word of ASCII bytes verbatim (word-at-a-time fast
+    /// path). `to_ne_bytes` keeps the source word's in-memory order, matching a
+    /// raw byte copy without a transmute.
+    ///
+    /// # Safety
+    /// At least `size_of::<usize>()` bytes of capacity must remain at the cursor.
+    #[inline]
+    pub unsafe fn push_ascii_word(&mut self, word: usize) {
+        debug_assert!(
+            self.remaining() >= USIZE_SIZE,
+            "push_ascii_word overran buffer"
+        );
+        // SAFETY: caller guarantees >= USIZE_SIZE writable bytes.
+        self.dst
+            .cast::<[u8; USIZE_SIZE]>()
+            .write_unaligned(word.to_ne_bytes());
+        self.dst = self.dst.add(USIZE_SIZE);
+    }
+
+    /// Set the final length, shrink, and reinterpret as a `String`.
+    ///
+    /// # Safety
+    /// Every byte written so far must form valid UTF-8 (the decode tables
+    /// guarantee this).
+    #[inline]
+    pub unsafe fn finish(mut self) -> String {
+        // SAFETY: `dst` and `buf`'s base share the same allocation, and `dst`
+        // never moved past `end`, so the offset is the written length.
+        let length = self.dst.offset_from(self.buf.as_ptr()) as usize;
+        self.buf.set_len(length);
+        self.buf.shrink_to_fit();
+        String::from_utf8_unchecked(self.buf)
+    }
 }
 
 //lifted from std internal

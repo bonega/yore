@@ -1,13 +1,11 @@
 #[cfg(feature = "alloc")]
 use alloc::borrow::Cow;
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
-#[cfg(feature = "alloc")]
 use core::mem;
 
 use super::Entry;
 #[cfg(feature = "alloc")]
-use super::{contains_nonascii, finalize_string, USIZE_SIZE};
+use super::{contains_nonascii, Utf8Writer, USIZE_SIZE};
 
 pub(crate) type Table = [Entry; 256];
 
@@ -19,10 +17,7 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
         return s.into();
     }
 
-    // +1 for branchless 4-byte write which may overshoot by 1 byte
-    let mut buffer: Vec<u8> = Vec::with_capacity(src.len() * 3 + 1);
-    // SAFETY: decode_slice expects buffer.len() >= src.len() * 3
-    let mut dst = buffer.as_mut_ptr();
+    let mut writer = Utf8Writer::for_input_len(src.len());
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
     // back to a scalar loop.
@@ -31,27 +26,22 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
     // sufficient alignment for `usize`, because it's a weird edge case.
     unsafe {
         if src.len() < USIZE_SIZE || USIZE_SIZE < mem::align_of::<usize>() {
-            decode_slice(table, src, &mut dst);
-            return finalize_string(buffer, dst).into();
+            decode_slice(table, src, &mut writer);
+            return writer.finish().into();
         }
 
         let (prefix, aligned_bytes, suffix) = src.align_to::<usize>();
-        decode_slice(table, prefix, &mut dst);
+        decode_slice(table, prefix, &mut writer);
         for chunk in aligned_bytes {
             if contains_nonascii(*chunk) {
-                decode_slice(
-                    table,
-                    mem::transmute::<&usize, &[u8; USIZE_SIZE]>(chunk),
-                    &mut dst,
-                );
+                decode_slice(table, &chunk.to_ne_bytes(), &mut writer);
             } else {
-                dst.copy_from_nonoverlapping(chunk as *const usize as *const u8, USIZE_SIZE);
-                dst = dst.add(USIZE_SIZE)
+                writer.push_ascii_word(*chunk);
             }
         }
 
-        decode_slice(table, suffix, &mut dst);
-        finalize_string(buffer, dst).into()
+        decode_slice(table, suffix, &mut writer);
+        writer.finish().into()
     }
 }
 
@@ -60,23 +50,21 @@ pub(crate) fn decode_helper<'a>(table: &Table, src: &'a [u8]) -> Cow<'a, str> {
 #[cfg(feature = "alloc")]
 #[inline(always)]
 pub(crate) fn decode_helper_non_ascii<'a>(table: &Table, bytes: &'a [u8]) -> Cow<'a, str> {
-    // +1 for branchless 4-byte write which may overshoot by 1 byte
-    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
-    // SAFETY: decode_slice expects buffer.len() >= src.len() * 3
-    let mut dst = buffer.as_mut_ptr();
-    unsafe { decode_slice(table, bytes, &mut dst) };
-    unsafe { finalize_string(buffer, dst) }.into()
+    let mut writer = Utf8Writer::for_input_len(bytes.len());
+    unsafe { decode_slice(table, bytes, &mut writer) };
+    unsafe { writer.finish() }.into()
 }
 
-/// Lookup every byte in [`src`] using provided [`table`] and write resulting bytes to [`dst`]
+/// Look up every byte in [`src`] using [`table`] and append the decoded UTF-8 to
+/// [`writer`].
+///
 /// # Safety
 ///
-/// This function is unsafe because it assumes that the buffer pointed to by [`dst`] has a length >= src.len() * 3
+/// `writer` must have at least `src.len() * 3 + 1` bytes of capacity remaining.
 #[cfg(feature = "alloc")]
 #[inline]
-unsafe fn decode_slice(table: &Table, src: &[u8], dst: &mut *mut u8) {
-    for b in src {
-        let entry = table[*b as usize];
-        entry.write_to(dst);
+unsafe fn decode_slice(table: &Table, src: &[u8], writer: &mut Utf8Writer) {
+    for &b in src {
+        writer.push_entry(table[b as usize]);
     }
 }
