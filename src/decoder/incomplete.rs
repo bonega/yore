@@ -1,15 +1,13 @@
 #[cfg(feature = "alloc")]
 use alloc::borrow::Cow;
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
-#[cfg(feature = "alloc")]
 use core::mem;
 
 #[cfg(feature = "alloc")]
 use crate::DecodeError;
 
 #[cfg(feature = "alloc")]
-use super::{contains_nonascii, finalize_string, USIZE_SIZE};
+use super::{contains_nonascii, Utf8Writer, USIZE_SIZE};
 
 use super::Entry;
 
@@ -36,9 +34,7 @@ pub(crate) fn decode_helper<'a>(
         return Ok(s.into());
     }
 
-    // +1 for the branchless 4-byte entry write which may overshoot by 1 byte
-    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
-    let mut dst = buffer.as_mut_ptr();
+    let mut writer = Utf8Writer::for_input_len(bytes.len());
 
     // If we wouldn't gain anything from the word-at-a-time implementation, fall
     // back to a scalar loop.
@@ -47,35 +43,30 @@ pub(crate) fn decode_helper<'a>(
     // sufficient alignment for `usize`, because it's a weird edge case.
     unsafe {
         if bytes.len() < USIZE_SIZE || USIZE_SIZE < mem::align_of::<usize>() {
-            decode_slice(table, bytes, &mut dst, fallback)?;
-            return Ok(finalize_string(buffer, dst).into());
+            decode_slice(table, bytes, &mut writer, fallback)?;
+            return Ok(writer.finish().into());
         }
 
         let (prefix, aligned_bytes, suffix) = bytes.align_to::<usize>();
-        decode_slice(table, prefix, &mut dst, fallback)?;
+        decode_slice(table, prefix, &mut writer, fallback)?;
         for (i, chunk) in aligned_bytes.iter().enumerate() {
             if contains_nonascii(*chunk) {
-                decode_slice(
-                    table,
-                    mem::transmute::<&usize, &[u8; USIZE_SIZE]>(chunk),
-                    &mut dst,
-                    fallback,
-                )
-                .map_err(|mut e| {
-                    e.position += prefix.len() + i * USIZE_SIZE;
-                    e
-                })?;
+                decode_slice(table, &chunk.to_ne_bytes(), &mut writer, fallback).map_err(
+                    |mut e| {
+                        e.position += prefix.len() + i * USIZE_SIZE;
+                        e
+                    },
+                )?;
             } else {
-                dst.copy_from_nonoverlapping(chunk as *const usize as *const u8, USIZE_SIZE);
-                dst = dst.add(USIZE_SIZE)
+                writer.push_ascii_word(*chunk);
             }
         }
 
-        decode_slice(table, suffix, &mut dst, fallback).map_err(|mut e| {
+        decode_slice(table, suffix, &mut writer, fallback).map_err(|mut e| {
             e.position += prefix.len() + aligned_bytes.len() * USIZE_SIZE;
             e
         })?;
-        Ok(finalize_string(buffer, dst).into())
+        Ok(writer.finish().into())
     }
 }
 
@@ -88,27 +79,26 @@ pub(crate) fn decode_helper_non_ascii<'a>(
     bytes: &'a [u8],
     fallback: Option<char>,
 ) -> Result<Cow<'a, str>, DecodeError> {
-    // +1 for the branchless 4-byte entry write which may overshoot by 1 byte
-    let mut buffer: Vec<u8> = Vec::with_capacity(bytes.len() * 3 + 1);
-    let mut dst = buffer.as_mut_ptr();
+    let mut writer = Utf8Writer::for_input_len(bytes.len());
     let fallback: Option<Entry> = fallback.map(Entry::from_char);
-    unsafe { decode_slice(table, bytes, &mut dst, fallback) }?;
-    Ok(unsafe { finalize_string(buffer, dst) }.into())
+    unsafe { decode_slice(table, bytes, &mut writer, fallback) }?;
+    Ok(unsafe { writer.finish() }.into())
 }
 
 /// # Safety
-/// `dst` must point to a buffer with at least `src.len() * 3 + 1` bytes of writable space remaining.
+///
+/// `writer` must have at least `src.len() * 3 + 1` bytes of capacity remaining.
 #[cfg(feature = "alloc")]
 #[inline]
 unsafe fn decode_slice(
     table: &Table,
     src: &[u8],
-    dst: &mut *mut u8,
+    writer: &mut Utf8Writer,
     fallback: Option<Entry>,
 ) -> Result<(), DecodeError> {
     for (i, &b) in src.iter().enumerate() {
         match table[b as usize].or(fallback) {
-            Some(entry) => entry.write_to(dst),
+            Some(entry) => writer.push_entry(entry),
             None => {
                 return Err(DecodeError {
                     position: i,
