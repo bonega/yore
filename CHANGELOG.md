@@ -5,7 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.1.1] - 2026-07-17
 - Speed up bulk `decode` of mostly-ASCII input by ~12-15%: each decode-table entry is now a niche-packed `NonZeroU32` (the UTF-8 bytes plus length), so a table read is a single load and the write a single store, and incomplete tables use the `Option` niche for undefined bytes. The allocation-free `decode_byte` primitive is also a few percent faster. No API changes.
+- Shrink the monomorphized bulk `decode` by ~40% (complete code pages) and ~34% (incomplete) by reading each word unaligned instead of via an aligned prefix, removing the byte-wise prefix loop and small-input fallback. Decode throughput is unchanged. No API changes.
 
 ## [2.1.0] - 2026-06-16
 - Add an optional `cp437g` feature: the `CP437G` code page (CP437 overlaid with the IBM-Graphics glyphs at the C0 control byte range) for VGA text-mode rendering. Off by default.
